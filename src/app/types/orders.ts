@@ -2,18 +2,18 @@ import { ColumnDef } from '@tanstack/react-table'
 
 export type Order = {
     id: string
-    oa_number: string
+    oa_number: string | null
     account_code: string
     account_name: string | null
     client_po: string | null
-    order_date: string
+    order_date: string | null
     req_pick_date: string | null
     req_ship_date: string | null
     req_del_date: string | null
-    wh_pick_date: string
-    wh_ship_date: string
+    wh_pick_date: string | null
+    wh_ship_date: string | null
     wh_del_date: string | null
-    status: 'pending' | 'picking' | 'shipped' | 'backorder'
+    status: 'pending' | 'picking' | 'shipped' | 'backorder' | 'cancelled'
     created_at: string
 }
 

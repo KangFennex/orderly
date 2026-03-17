@@ -6,6 +6,7 @@ export const orderStatusOptions: { value: FilterStatus; label: string }[] = [
     { value: 'picking', label: 'Picking' },
     { value: 'shipped', label: 'Shipped' },
     { value: 'backorder', label: 'Backorder' },
+    { value: 'cancelled', label: 'Cancelled' },
 ]
 
 export const orderDateFieldOptions: { value: DateFilterField; label: string }[] = [

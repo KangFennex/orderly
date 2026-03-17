@@ -3,10 +3,11 @@ import type { Order } from '@/app/types/orders'
 export type OrderStatus = Order['status']
 
 const orderStatusTransitions: Record<OrderStatus, OrderStatus[]> = {
-    pending: ['picking'],
-    picking: ['shipped', 'backorder'],
+    pending: ['picking', 'cancelled'],
+    picking: ['shipped', 'backorder', 'cancelled'],
     shipped: [],
-    backorder: [],
+    backorder: ['cancelled'],
+    cancelled: [],
 }
 
 export function getNextOrderStatus(currentStatus: OrderStatus) {

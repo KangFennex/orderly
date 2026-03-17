@@ -41,7 +41,7 @@ export function FavoritesModal({ isOpen, favoriteOrders, onClose }: FavoritesMod
                         <ul className="favorites-list" aria-label="Favorite orders list">
                             {favoriteOrders.map((order) => (
                                 <li key={order.id} className="favorites-list-item">
-                                    <span>{order.oa_number}</span>
+                                    <span>{order.oa_number ?? '-'}</span>
                                     <span>{order.account_code}</span>
                                     <span>{order.account_name ?? '-'}</span>
                                     <span>{order.status}</span>

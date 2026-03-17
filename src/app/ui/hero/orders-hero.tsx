@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import Image from 'next/image'
+import { FaRegCopy } from 'react-icons/fa'
 import { IoMdAdd, IoMdCheckmark } from 'react-icons/io';
 import { IoIosRefresh } from "react-icons/io";
 import { MdStarBorder } from "react-icons/md";
@@ -25,6 +26,9 @@ type OrdersHeroProps = {
     onClearFilters: () => void
     onOpenAddOrderModal: () => void
     onOpenFavoritesModal: () => void
+    onCopySelected: () => void
+    onCopySelectedCsv: () => void
+    selectedOrderCount: number
 }
 
 export function OrdersHero({
@@ -39,6 +43,9 @@ export function OrdersHero({
     onClearFilters,
     onOpenAddOrderModal,
     onOpenFavoritesModal,
+    onCopySelected,
+    onCopySelectedCsv,
+    selectedOrderCount,
 }: OrdersHeroProps) {
     const [isClearing, setIsClearing] = useState(false)
 
@@ -53,16 +60,13 @@ export function OrdersHero({
 
     return (
         <div className="orders-hero">
+            <Image
+                src={kitsuneLogo}
+                alt="Orderly logo"
+                className="orders-hero-logo-centered"
+                priority
+            />
             <div className="orders-hero-content">
-                <div className="orders-hero-brand-row">
-                    <Image
-                        src={kitsuneLogo}
-                        alt="Orderly logo"
-                        className="orders-hero-logo"
-                        priority
-                    />
-                    <h1 className="orders-brand-title">Orderly</h1>
-                </div>
                 <div className="orders-filter-row">
                     <span className="orders-filter-label">Status</span>
                     <div className="orders-status-filters" role="group" aria-label="Filter orders by status">
@@ -141,38 +145,61 @@ export function OrdersHero({
                 </div>
             </div>
             <div className="orders-hero-actions">
-                <button
-                    className="orders-clear-filters-button"
-                    type="button"
-                    onClick={handleClearFilters}
-                    aria-label="Clear filters"
-                    disabled={
-                        searchValue.trim().length === 0 &&
-                        selectedStatuses.length === 0 &&
-                        selectedDateRange === null
-                    }
-                >
-                    <IoIosRefresh
-                        size={20}
-                        className={isClearing ? 'orders-refresh-icon is-rotating' : 'orders-refresh-icon'}
-                    />
-                </button>
-                <button
-                    className="orders-clear-filters-button"
-                    type="button"
-                    onClick={onOpenFavoritesModal}
-                    aria-label="Open favorites modal"
-                >
-                    <MdStarBorder size={20} />
-                </button>
-                <button
-                    className="add-order-button"
-                    type="button"
-                    onClick={onOpenAddOrderModal}
-                    aria-label="Open add order modal"
-                >
-                    <IoMdAdd size={30} color="#f8fafc" />
-                </button>
+                <div className="orders-hero-actions-grid">
+                    <button
+                        className="orders-clear-filters-button"
+                        type="button"
+                        onClick={handleClearFilters}
+                        aria-label="Clear filters"
+                        disabled={
+                            searchValue.trim().length === 0 &&
+                            selectedStatuses.length === 0 &&
+                            selectedDateRange === null
+                        }
+                    >
+                        <IoIosRefresh
+                            size={20}
+                            className={isClearing ? 'orders-refresh-icon is-rotating' : 'orders-refresh-icon'}
+                        />
+                    </button>
+                    <button
+                        className="orders-clear-filters-button"
+                        type="button"
+                        onClick={onOpenFavoritesModal}
+                        aria-label="Open favorites modal"
+                    >
+                        <MdStarBorder size={20} />
+                    </button>
+                    <button
+                        className="orders-clear-filters-button"
+                        type="button"
+                        onClick={onCopySelected}
+                        aria-label="Copy selected orders"
+                        disabled={selectedOrderCount === 0}
+                    >
+                        <FaRegCopy size={16} />
+                        <span>{selectedOrderCount}</span>
+                    </button>
+                    <button
+                        className="orders-clear-filters-button"
+                        type="button"
+                        onClick={onCopySelectedCsv}
+                        aria-label="Copy selected orders as CSV"
+                        disabled={selectedOrderCount === 0}
+                    >
+                        CSV
+                    </button>
+                </div>
+                <div className="orders-hero-add-action">
+                    <button
+                        className="add-order-button"
+                        type="button"
+                        onClick={onOpenAddOrderModal}
+                        aria-label="Open add order modal"
+                    >
+                        <IoMdAdd size={30} color="#f8fafc" />
+                    </button>
+                </div>
             </div>
         </div>
     )
