@@ -7,9 +7,15 @@ type FavoritesModalProps = {
     isOpen: boolean
     favoriteOrders: Order[]
     onClose: () => void
+    onSelectOrder: (order: Order) => void
 }
 
-export function FavoritesModal({ isOpen, favoriteOrders, onClose }: FavoritesModalProps) {
+export function FavoritesModal({
+    isOpen,
+    favoriteOrders,
+    onClose,
+    onSelectOrder,
+}: FavoritesModalProps) {
     if (!isOpen) {
         return null
     }
@@ -40,7 +46,19 @@ export function FavoritesModal({ isOpen, favoriteOrders, onClose }: FavoritesMod
                     ) : (
                         <ul className="favorites-list" aria-label="Favorite orders list">
                             {favoriteOrders.map((order) => (
-                                <li key={order.id} className="favorites-list-item">
+                                <li
+                                    key={order.id}
+                                    className="favorites-list-item"
+                                    role="button"
+                                    tabIndex={0}
+                                    onClick={() => onSelectOrder(order)}
+                                    onKeyDown={(event) => {
+                                        if (event.key === 'Enter' || event.key === ' ') {
+                                            event.preventDefault()
+                                            onSelectOrder(order)
+                                        }
+                                    }}
+                                >
                                     <span>{order.oa_number ?? '-'}</span>
                                     <span>{order.account_code}</span>
                                     <span>{order.account_name ?? '-'}</span>

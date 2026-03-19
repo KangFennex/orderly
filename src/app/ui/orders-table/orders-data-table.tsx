@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
     getCoreRowModel,
     getSortedRowModel,
@@ -30,6 +30,8 @@ type OrdersDataTableProps = {
     onToggleOrderSelection: (orderId: string) => void
     onToggleSelectAllVisible: () => void
     areAllVisibleSelected: boolean
+    externalOrderToView?: Order | null
+    onExternalOrderToViewHandled?: () => void
 }
 
 export function OrdersDataTable({
@@ -40,6 +42,8 @@ export function OrdersDataTable({
     onToggleOrderSelection,
     onToggleSelectAllVisible,
     areAllVisibleSelected,
+    externalOrderToView,
+    onExternalOrderToViewHandled,
 }: OrdersDataTableProps) {
     'use no memo'
     const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({})
@@ -277,6 +281,15 @@ export function OrdersDataTable({
         setActiveNoteOrderId(orderId)
         setNoteDraft(notesByOrderId[orderId] ?? '')
     }
+
+    useEffect(() => {
+        if (!externalOrderToView) {
+            return
+        }
+
+        openOrderViewModal(externalOrderToView)
+        onExternalOrderToViewHandled?.()
+    }, [externalOrderToView, onExternalOrderToViewHandled])
 
     const handleSortChange = (columnId: keyof Order, direction: false | 'asc' | 'desc') => {
         const newSorting: SortingState =

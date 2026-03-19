@@ -27,6 +27,8 @@ type FeedbackMessage = {
 export function OrdersPageClient({ initialOrders }: OrdersPageClientProps) {
     const [isAddOrderModalOpen, setIsAddOrderModalOpen] = useState(false)
     const [isFavoritesModalOpen, setIsFavoritesModalOpen] = useState(false)
+    const [pendingFavoriteOrderToView, setPendingFavoriteOrderToView] = useState<Order | null>(null)
+    const [activeFavoriteOrderToView, setActiveFavoriteOrderToView] = useState<Order | null>(null)
     const [orders, setOrders] = useState(initialOrders)
     const [searchValue, setSearchValue] = useState('')
     const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('')
@@ -272,6 +274,19 @@ export function OrdersPageClient({ initialOrders }: OrdersPageClientProps) {
 
     const favoriteOrders = orders.filter((order) => favoriteOrderIds.includes(order.id))
 
+    const handleSelectFavoriteOrder = (order: Order) => {
+        setIsFavoritesModalOpen(false)
+
+        if (order.status === 'pending') {
+            setPendingFavoriteOrderToView(order)
+            setActiveFavoriteOrderToView(null)
+            return
+        }
+
+        setActiveFavoriteOrderToView(order)
+        setPendingFavoriteOrderToView(null)
+    }
+
     useEffect(() => {
         const timeout = window.setTimeout(() => {
             setDebouncedSearchTerm(searchValue)
@@ -368,6 +383,8 @@ export function OrdersPageClient({ initialOrders }: OrdersPageClientProps) {
                             toggleSelectAllVisible(pendingVisibleOrderIds, areAllPendingVisibleSelected)
                         }
                         areAllVisibleSelected={areAllPendingVisibleSelected}
+                        externalOrderToView={pendingFavoriteOrderToView}
+                        onExternalOrderToViewHandled={() => setPendingFavoriteOrderToView(null)}
                     />
                 </section>
 
@@ -383,6 +400,8 @@ export function OrdersPageClient({ initialOrders }: OrdersPageClientProps) {
                             toggleSelectAllVisible(activeVisibleOrderIds, areAllActiveVisibleSelected)
                         }
                         areAllVisibleSelected={areAllActiveVisibleSelected}
+                        externalOrderToView={activeFavoriteOrderToView}
+                        onExternalOrderToViewHandled={() => setActiveFavoriteOrderToView(null)}
                     />
                 </section>
                 <AddOrderModal
@@ -395,6 +414,7 @@ export function OrdersPageClient({ initialOrders }: OrdersPageClientProps) {
                     isOpen={isFavoritesModalOpen}
                     favoriteOrders={favoriteOrders}
                     onClose={() => setIsFavoritesModalOpen(false)}
+                    onSelectOrder={handleSelectFavoriteOrder}
                 />
             </section>
         </main>
