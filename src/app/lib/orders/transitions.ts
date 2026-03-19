@@ -4,10 +4,10 @@ export type OrderStatus = Order['status']
 
 const orderStatusTransitions: Record<OrderStatus, OrderStatus[]> = {
     pending: ['picking', 'cancelled'],
-    picking: ['shipped', 'backorder', 'cancelled'],
+    picking: ['pending', 'shipped', 'cancelled'],
     shipped: [],
-    backorder: ['cancelled'],
-    cancelled: [],
+    backorder: ['pending', 'cancelled'],
+    cancelled: ['pending', 'backorder'],
 }
 
 export function getNextOrderStatus(currentStatus: OrderStatus) {

@@ -28,6 +28,12 @@ export function filterOrders({
     selectedDateRange,
     searchTerm = '',
 }: FilterOrdersArgs) {
+    const normalizedSearchTerm = searchTerm.trim()
+
+    if (normalizedSearchTerm.length > 0) {
+        return orders.filter((order) => matchesOrderSearch(order, normalizedSearchTerm))
+    }
+
     return orders.filter((order) => {
         const statusMatches =
             selectedStatuses.length === 0
@@ -47,7 +53,7 @@ export function filterOrders({
             })()
             : true
 
-        const searchMatches = matchesOrderSearch(order, searchTerm)
+        const searchMatches = matchesOrderSearch(order, normalizedSearchTerm)
 
         return statusMatches && dateMatches && searchMatches
     })

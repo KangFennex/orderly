@@ -49,7 +49,7 @@ export function AddOrderModal({
             }
 
             if (!isValidUsDate(value)) {
-                inputElement.setCustomValidity('Use a valid date in MM/DD/YYYY format.')
+                inputElement.setCustomValidity('Use a valid date in MM/DD or MM/DD/YYYY format.')
                 hasInvalidDate = true
                 continue
             }
@@ -84,7 +84,12 @@ export function AddOrderModal({
             })
 
             if (!response.ok) {
-                throw new Error('Unable to create order. Please try again.')
+                const errorJson = (await response.json().catch(() => null)) as
+                    | { error?: string }
+                    | null
+                throw new Error(
+                    errorJson?.error?.trim() || 'Unable to create order. Please try again.',
+                )
             }
 
             const json = (await response.json()) as { order: Order }
@@ -121,7 +126,6 @@ export function AddOrderModal({
             className="add-order-modal-overlay"
             role="dialog"
             aria-modal="true"
-            onClick={onClose}
         >
             <div className="add-order-modal" onClick={(event) => event.stopPropagation()}>
                 <div className="add-order-modal-header">
@@ -138,13 +142,6 @@ export function AddOrderModal({
 
                 <form className="add-order-form" onSubmit={handleSubmit} onInput={handleInput}>
                     <OrderFormInputField
-                        label="OA Number"
-                        type="text"
-                        name="oa_number"
-                        placeholder="Enter OA number"
-                    />
-
-                    <OrderFormInputField
                         label="Account Code"
                         type="text"
                         name="account_code"
@@ -153,10 +150,10 @@ export function AddOrderModal({
                     />
 
                     <OrderFormInputField
-                        label="Account Name"
+                        label="OA Number"
                         type="text"
-                        name="account_name"
-                        placeholder="Enter account name"
+                        name="oa_number"
+                        placeholder="Enter OA number"
                     />
 
                     <OrderFormInputField
@@ -167,9 +164,24 @@ export function AddOrderModal({
                     />
 
                     <OrderFormInputField
+                        label="Account Name"
+                        type="text"
+                        name="account_name"
+                        placeholder="Enter account name"
+                    />
+
+                    <OrderFormInputField
                         label="Order Date"
                         type="text"
                         name="order_date"
+                        placeholder="MM/DD/YYYY"
+                        inputMode="numeric"
+                    />
+
+                    <OrderFormInputField
+                        label="Req. Delivery Date"
+                        type="text"
+                        name="requested_delivery_date"
                         placeholder="MM/DD/YYYY"
                         inputMode="numeric"
                     />
@@ -186,14 +198,6 @@ export function AddOrderModal({
                         label="Req. Ship Date"
                         type="text"
                         name="requested_ship_date"
-                        placeholder="MM/DD/YYYY"
-                        inputMode="numeric"
-                    />
-
-                    <OrderFormInputField
-                        label="Req. Delivery Date"
-                        type="text"
-                        name="requested_delivery_date"
                         placeholder="MM/DD/YYYY"
                         inputMode="numeric"
                     />

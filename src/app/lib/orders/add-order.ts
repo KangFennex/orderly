@@ -17,8 +17,14 @@ export function formatUsDateInput(value: string) {
         return digitsOnly
     }
 
-    if (digitsOnly.length <= 4) {
-        return `${digitsOnly.slice(0, 2)}/${digitsOnly.slice(2)}`
+
+    if (digitsOnly.length === 4) {
+        // Auto-complete to MM/DD/2026 when user enters MM/DD
+        return `${digitsOnly.slice(0, 2)}/${digitsOnly.slice(2)}/2026`
+    }
+
+    if (digitsOnly.length <= 6) {
+        return `${digitsOnly.slice(0, 2)}/${digitsOnly.slice(2, 4)}/${digitsOnly.slice(4)}`
     }
 
     return `${digitsOnly.slice(0, 2)}/${digitsOnly.slice(2, 4)}/${digitsOnly.slice(4)}`
@@ -26,15 +32,23 @@ export function formatUsDateInput(value: string) {
 
 export function isValidUsDate(dateValue: string) {
     const trimmedDate = dateValue.trim()
-    const match = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(trimmedDate)
+
+    // Try MM/DD/YYYY format first
+    let match = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(trimmedDate)
+    let year = 2026
 
     if (!match) {
-        return false
+        // Try MM/DD format (assume 2026)
+        match = /^(\d{2})\/(\d{2})$/.exec(trimmedDate)
+        if (!match) {
+            return false
+        }
+    } else {
+        year = Number(match[3])
     }
 
     const month = Number(match[1])
     const day = Number(match[2])
-    const year = Number(match[3])
 
     if (month < 1 || month > 12) {
         return false
@@ -50,15 +64,28 @@ export function isValidUsDate(dateValue: string) {
 }
 
 export function toIsoDate(dateValue: string) {
-    const match = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(dateValue.trim())
+    const trimmedDate = dateValue.trim()
 
-    if (!match) {
+    if (!trimmedDate) {
         return null
     }
 
-    return `${match[3]}-${match[1]}-${match[2]}`
-}
+    // Try MM/DD/YYYY format first
+    let match = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(trimmedDate)
 
+    if (match) {
+        return `${match[3]}-${match[1]}-${match[2]}`
+    }
+
+    // Try MM/DD format (assume 2026)
+    match = /^(\d{2})\/(\d{2})$/.exec(trimmedDate)
+
+    if (match) {
+        return `2026-${match[1]}-${match[2]}`
+    }
+
+    return null
+}
 export type CreateOrderPayload = {
     oa_number: string | null
     account_code: string

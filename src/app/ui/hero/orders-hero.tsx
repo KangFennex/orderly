@@ -48,6 +48,7 @@ export function OrdersHero({
     selectedOrderCount,
 }: OrdersHeroProps) {
     const [isClearing, setIsClearing] = useState(false)
+    const isSearchActive = searchValue.trim().length > 0
 
     const handleClearFilters = () => {
         onClearFilters()
@@ -80,6 +81,7 @@ export function OrdersHero({
                                     className={isActive ? 'orders-filter-button is-active' : 'orders-filter-button'}
                                     onClick={() => onToggleStatus(option.value)}
                                     aria-pressed={isActive}
+                                    disabled={isSearchActive}
                                 >
                                     <span className="orders-filter-tick" aria-hidden="true">
                                         {isActive ? <IoMdCheckmark size={16} /> : null}
@@ -100,6 +102,7 @@ export function OrdersHero({
                                 value={selectedDateField}
                                 onChange={(event) => onSelectDateField(event.target.value as DateFilterField)}
                                 aria-label="Date field"
+                                disabled={isSearchActive}
                             >
                                 {orderDateFieldOptions.map((option) => (
                                     <option key={option.value} value={option.value}>
@@ -120,6 +123,7 @@ export function OrdersHero({
                                         className={isActive ? 'orders-filter-button is-active' : 'orders-filter-button'}
                                         onClick={() => onSelectDateRange(isActive ? null : option.value)}
                                         aria-pressed={isActive}
+                                        disabled={isSearchActive}
                                     >
                                         <span className="orders-filter-tick" aria-hidden="true">
                                             {isActive ? <IoMdCheckmark size={16} /> : null}
