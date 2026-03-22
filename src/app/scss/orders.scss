@@ -930,6 +930,8 @@
     0 24px 50px rgba(2, 6, 23, 0.62),
     0 8px 16px rgba(2, 6, 23, 0.4);
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .add-order-modal-header {
@@ -1098,6 +1100,33 @@
 
   .add-order-form {
     grid-template-columns: 1fr;
+    overflow-y: auto;
+    flex: 1;
+    min-height: 0;
+
+    &::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: rgba(56, 189, 248, 0.55);
+      border-radius: 999px;
+
+      &:hover {
+        background: rgba(56, 189, 248, 0.85);
+      }
+    }
+
+    scrollbar-width: thin;
+    scrollbar-color: rgba(56, 189, 248, 0.55) transparent;
+  }
+
+  .add-order-modal {
+    max-height: 80vh;
   }
 
   .order-view-form {

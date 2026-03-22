@@ -40,10 +40,14 @@ export async function updateOrderStatusInDatabase(orderId: string, status: Order
         .select(
             'id, oa_number, account_code, account_name, client_po, order_date, req_pick_date, req_ship_date, req_del_date, wh_pick_date, wh_ship_date, wh_del_date, status, created_at',
         )
-        .single()
+        .maybeSingle()
 
     if (error) {
         throw new Error(`Failed to update order status in Supabase: ${error.message}`)
+    }
+
+    if (!data) {
+        throw new Error(`Order not found or update was blocked (id: ${orderId})`)
     }
 
     return data as Order
@@ -71,10 +75,14 @@ export async function updateOrderInDatabase(orderId: string, input: UpdateOrderI
         .select(
             'id, oa_number, account_code, account_name, client_po, order_date, req_pick_date, req_ship_date, req_del_date, wh_pick_date, wh_ship_date, wh_del_date, status, created_at',
         )
-        .single()
+        .maybeSingle()
 
     if (error) {
         throw new Error(`Failed to update order in Supabase: ${error.message}`)
+    }
+
+    if (!data) {
+        throw new Error(`Order not found or update was blocked (id: ${orderId})`)
     }
 
     return data as Order
