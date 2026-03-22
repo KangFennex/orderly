@@ -1,0 +1,130 @@
+
+@media (max-width: 760px) {
+  .orders-page {
+    padding: 1rem 0.6rem;
+  }
+
+  .orders-hero {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 0.9rem 0.8rem;
+  }
+
+  .orders-hero-actions {
+    align-items: stretch;
+    width: 100%;
+  }
+
+  .orders-hero-actions-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .orders-hero-actions-grid .orders-clear-filters-button,
+  .orders-hero-add-action .add-order-button {
+    width: 100%;
+  }
+
+  .orders-hero-logo-centered {
+    top: 0.85rem;
+    height: 2rem;
+  }
+
+  .orders-hero-content {
+    padding-top: 2.55rem;
+  }
+
+  .orders-filter-row {
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+
+  .orders-filter-label {
+    min-width: auto;
+    width: 100%;
+  }
+
+  .orders-search-input {
+    width: 100%;
+  }
+
+  .orders-table {
+    min-width: 820px;
+
+    .orders-status-head,
+    .orders-status-cell {
+      width: 9.2rem;
+      min-width: 9.2rem;
+    }
+  }
+
+  .add-order-form {
+    grid-template-columns: 1fr;
+    overflow-y: auto;
+    flex: 1;
+    min-height: 0;
+
+    &::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: rgba(56, 189, 248, 0.55);
+      border-radius: 999px;
+
+      &:hover {
+        background: rgba(56, 189, 248, 0.85);
+      }
+    }
+
+    scrollbar-width: thin;
+    scrollbar-color: rgba(56, 189, 248, 0.55) transparent;
+  }
+
+  .add-order-modal {
+    max-height: 80vh;
+  }
+
+  .order-view-modal {
+    max-height: 80vh;
+  }
+
+  .order-view-modal-content {
+    overflow-y: auto;
+    flex: 1;
+    min-height: 0;
+
+    &::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: rgba(56, 189, 248, 0.55);
+      border-radius: 999px;
+
+      &:hover {
+        background: rgba(56, 189, 248, 0.85);
+      }
+    }
+
+    scrollbar-width: thin;
+    scrollbar-color: rgba(56, 189, 248, 0.55) transparent;
+  }
+
+  .order-view-form {
+    grid-template-columns: 1fr;
+  }
+
+  .orders-table {
+    .orders-detail-list {
+      grid-template-columns: 1fr;
+    }
+  }
+}
