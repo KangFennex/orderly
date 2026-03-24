@@ -10,8 +10,7 @@ import {
 
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table'
 import { toDateInputValue, formatDate } from '@/app/lib/orders'
-import { useFavoritesStore } from '@/app/lib/favorites-store'
-import { useOrderNotesStore } from '@/app/lib/order-notes-store'
+import type { OrderNotesMap } from '@/app/lib/order-notes'
 
 import { columns, type Order } from '@/app/types/orders'
 import {
@@ -26,6 +25,11 @@ type OrdersDataTableProps = {
     data: Order[]
     onChangeStatus: (orderId: string, nextStatus: Order['status']) => void
     onUpdateOrder: (orderId: string, updates: Partial<Order>) => Promise<boolean>
+    favoriteOrderIds: string[]
+    pendingFavoriteOrderIds: string[]
+    onToggleFavorite: (orderId: string) => void
+    notesByOrderId: OrderNotesMap
+    onSaveOrderNote: (orderId: string, note: string) => Promise<boolean>
     selectedOrderIds: string[]
     onToggleOrderSelection: (orderId: string) => void
     onToggleSelectAllVisible: () => void
@@ -38,6 +42,11 @@ export function OrdersDataTable({
     data,
     onChangeStatus,
     onUpdateOrder,
+    favoriteOrderIds,
+    pendingFavoriteOrderIds,
+    onToggleFavorite,
+    notesByOrderId,
+    onSaveOrderNote,
     selectedOrderIds,
     onToggleOrderSelection,
     onToggleSelectAllVisible,
@@ -50,14 +59,10 @@ export function OrdersDataTable({
     const [sorting, setSorting] = useState<SortingState>([])
     const [activeNoteOrderId, setActiveNoteOrderId] = useState<string | null>(null)
     const [noteDraft, setNoteDraft] = useState('')
+    const [isSavingNote, setIsSavingNote] = useState(false)
     const [activeViewOrder, setActiveViewOrder] = useState<Order | null>(null)
     const [isSavingOrderEdit, setIsSavingOrderEdit] = useState(false)
     const [orderEditDraft, setOrderEditDraft] = useState<OrderEditDraft | null>(null)
-
-    const favoriteOrderIds = useFavoritesStore((state) => state.favoriteOrderIds)
-    const toggleFavorite = useFavoritesStore((state) => state.toggleFavorite)
-    const notesByOrderId = useOrderNotesStore((state) => state.notesByOrderId)
-    const setOrderNote = useOrderNotesStore((state) => state.setOrderNote)
 
     const table = useReactTable({
         data,
@@ -268,13 +273,24 @@ export function OrdersDataTable({
         }
     }
 
-    const saveOrderNote = () => {
-        if (!activeNoteOrderId) {
+    const saveOrderNote = async () => {
+        if (!activeNoteOrderId || isSavingNote) {
             return
         }
 
-        setOrderNote(activeNoteOrderId, noteDraft)
-        closeOrderNoteModal()
+        setIsSavingNote(true)
+
+        let didSave = false
+
+        try {
+            didSave = await onSaveOrderNote(activeNoteOrderId, noteDraft)
+        } finally {
+            setIsSavingNote(false)
+        }
+
+        if (didSave) {
+            closeOrderNoteModal()
+        }
     }
 
     const openOrderNoteModal = (orderId: string) => {
@@ -313,6 +329,7 @@ export function OrdersDataTable({
                     {table.getRowModel().rows.length ? (
                         table.getRowModel().rows.map((row) => {
                             const isFavorite = favoriteOrderIds.includes(row.original.id)
+                            const isFavoriteActionPending = pendingFavoriteOrderIds.includes(row.original.id)
                             const hasOrderNote =
                                 (notesByOrderId[row.original.id] ?? '').trim().length > 0
                             const isSelected = selectedOrderIds.includes(row.original.id)
@@ -326,10 +343,11 @@ export function OrdersDataTable({
                                     isExpanded={isExpanded}
                                     isSelected={isSelected}
                                     isFavorite={isFavorite}
+                                    isFavoriteActionPending={isFavoriteActionPending}
                                     hasOrderNote={hasOrderNote}
                                     onToggleExpand={toggleRow}
                                     onToggleSelection={onToggleOrderSelection}
-                                    onToggleFavorite={toggleFavorite}
+                                    onToggleFavorite={onToggleFavorite}
                                     onOpenNoteModal={openOrderNoteModal}
                                     onOpenViewModal={openOrderViewModal}
                                     onChangeStatus={onChangeStatus}
@@ -349,6 +367,7 @@ export function OrdersDataTable({
             <OrderNoteModal
                 orderId={activeNoteOrderId}
                 noteDraft={noteDraft}
+                isSaving={isSavingNote}
                 onNoteDraftChange={setNoteDraft}
                 onSave={saveOrderNote}
                 onClose={closeOrderNoteModal}

@@ -13,6 +13,7 @@ type OrderRowActionsCellProps = {
     oaNumber: string | null
     isSelected: boolean
     isFavorite: boolean
+    isFavoriteActionPending: boolean
     hasOrderNote: boolean
     isExpanded: boolean
     onToggleSelection: (orderId: string) => void
@@ -29,6 +30,7 @@ export function OrderRowActionsCell({
     oaNumber,
     isSelected,
     isFavorite,
+    isFavoriteActionPending,
     hasOrderNote,
     isExpanded,
     onToggleSelection,
@@ -94,11 +96,13 @@ export function OrderRowActionsCell({
                                 : 'orders-save-toggle'
                         }
                         onClick={() => onToggleFavorite(orderId)}
+                        disabled={isFavoriteActionPending}
                         aria-label={
                             isFavorite
                                 ? 'Remove order from favorites'
                                 : 'Add order to favorites'
                         }
+                        aria-busy={isFavoriteActionPending ? 'true' : 'false'}
                         title={
                             isFavorite
                                 ? 'Remove from favorites'

@@ -14,6 +14,7 @@ type OrderTableRowProps = {
     isExpanded: boolean
     isSelected: boolean
     isFavorite: boolean
+    isFavoriteActionPending: boolean
     hasOrderNote: boolean
     onToggleExpand: (rowId: string) => void
     onToggleSelection: (orderId: string) => void
@@ -29,6 +30,7 @@ export function OrderTableRow({
     isExpanded,
     isSelected,
     isFavorite,
+    isFavoriteActionPending,
     hasOrderNote,
     onToggleExpand,
     onToggleSelection,
@@ -52,6 +54,7 @@ export function OrderTableRow({
                     oaNumber={order.oa_number}
                     isSelected={isSelected}
                     isFavorite={isFavorite}
+                    isFavoriteActionPending={isFavoriteActionPending}
                     hasOrderNote={hasOrderNote}
                     isExpanded={isExpanded}
                     onToggleSelection={onToggleSelection}

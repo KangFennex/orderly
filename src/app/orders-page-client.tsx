@@ -1,7 +1,8 @@
 "use client"
 
 import { useEffect, useState } from 'react'
-import { useFavoritesStore } from '@/app/lib/favorites-store'
+import { fetchFavoriteOrderIdsByOrderIds, setOrderFavorite } from '@/app/lib/order-favorites'
+import { fetchOrderNotesByOrderIds, saveOrderNote, type OrderNotesMap } from '@/app/lib/order-notes'
 import {
     filterOrders,
     updateOrderStatus,
@@ -33,11 +34,13 @@ export function OrdersPageClient({ initialOrders }: OrdersPageClientProps) {
     const [searchValue, setSearchValue] = useState('')
     const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('')
     const [feedbackMessage, setFeedbackMessage] = useState<FeedbackMessage | null>(null)
+    const [favoriteOrderIds, setFavoriteOrderIds] = useState<string[]>([])
+    const [pendingFavoriteOrderIds, setPendingFavoriteOrderIds] = useState<string[]>([])
+    const [notesByOrderId, setNotesByOrderId] = useState<OrderNotesMap>({})
     const [selectedStatuses, setSelectedStatuses] = useState<FilterStatus[]>(['pending', 'picking', 'backorder'])
     const [selectedDateField, setSelectedDateField] = useState<DateFilterField>('req_ship_date')
     const [selectedDateRange, setSelectedDateRange] = useState<DateRangeFilter | null>(null)
     const [selectedOrderIds, setSelectedOrderIds] = useState<string[]>([])
-    const favoriteOrderIds = useFavoritesStore((state) => state.favoriteOrderIds)
 
     const toggleStatus = (status: FilterStatus) => {
         setSelectedStatuses((prev) =>
@@ -137,6 +140,91 @@ export function OrdersPageClient({ initialOrders }: OrdersPageClientProps) {
             const message = error instanceof Error ? error.message : 'Unable to update order.'
             setFeedbackMessage({ type: 'error', text: message })
             return false
+        }
+    }
+
+    const handleSaveOrderNote = async (orderId: string, note: string) => {
+        const previousNote = notesByOrderId[orderId] ?? ''
+
+        setNotesByOrderId((prev) => ({
+            ...prev,
+            [orderId]: note,
+        }))
+
+        try {
+            const savedNote = await saveOrderNote(orderId, note)
+
+            setNotesByOrderId((prev) => ({
+                ...prev,
+                [orderId]: savedNote,
+            }))
+
+            return true
+        } catch (error) {
+            setNotesByOrderId((prev) => ({
+                ...prev,
+                [orderId]: previousNote,
+            }))
+
+            const message = error instanceof Error ? error.message : 'Unable to save order note.'
+            setFeedbackMessage({ type: 'error', text: message })
+            return false
+        }
+    }
+
+    const handleToggleFavorite = async (orderId: string) => {
+        if (pendingFavoriteOrderIds.includes(orderId)) {
+            return
+        }
+
+        const isAlreadyFavorite = favoriteOrderIds.includes(orderId)
+        const nextIsFavorite = !isAlreadyFavorite
+
+        setPendingFavoriteOrderIds((prev) => [...prev, orderId])
+
+        setFavoriteOrderIds((prev) => {
+            if (nextIsFavorite) {
+                if (prev.includes(orderId)) {
+                    return prev
+                }
+
+                return [...prev, orderId]
+            }
+
+            return prev.filter((id) => id !== orderId)
+        })
+
+        try {
+            const savedAsFavorite = await setOrderFavorite(orderId, nextIsFavorite)
+
+            setFavoriteOrderIds((prev) => {
+                if (savedAsFavorite) {
+                    if (prev.includes(orderId)) {
+                        return prev
+                    }
+
+                    return [...prev, orderId]
+                }
+
+                return prev.filter((id) => id !== orderId)
+            })
+        } catch (error) {
+            setFavoriteOrderIds((prev) => {
+                if (isAlreadyFavorite) {
+                    if (prev.includes(orderId)) {
+                        return prev
+                    }
+
+                    return [...prev, orderId]
+                }
+
+                return prev.filter((id) => id !== orderId)
+            })
+
+            const message = error instanceof Error ? error.message : 'Unable to update favorite.'
+            setFeedbackMessage({ type: 'error', text: message })
+        } finally {
+            setPendingFavoriteOrderIds((prev) => prev.filter((id) => id !== orderId))
         }
     }
 
@@ -298,6 +386,81 @@ export function OrdersPageClient({ initialOrders }: OrdersPageClientProps) {
     }, [searchValue])
 
     useEffect(() => {
+        const orderIds = orders.map((order) => order.id)
+
+        if (orderIds.length === 0) {
+            setNotesByOrderId({})
+            return
+        }
+
+        let isCancelled = false
+
+        const loadOrderNotes = async () => {
+            try {
+                const notes = await fetchOrderNotesByOrderIds(orderIds)
+
+                if (isCancelled) {
+                    return
+                }
+
+                setNotesByOrderId((prev) => ({
+                    ...prev,
+                    ...notes,
+                }))
+            } catch (error) {
+                if (isCancelled) {
+                    return
+                }
+
+                const message = error instanceof Error ? error.message : 'Unable to load order notes.'
+                setFeedbackMessage({ type: 'error', text: message })
+            }
+        }
+
+        void loadOrderNotes()
+
+        return () => {
+            isCancelled = true
+        }
+    }, [orders])
+
+    useEffect(() => {
+        const orderIds = orders.map((order) => order.id)
+
+        if (orderIds.length === 0) {
+            setFavoriteOrderIds([])
+            return
+        }
+
+        let isCancelled = false
+
+        const loadFavorites = async () => {
+            try {
+                const favoriteIds = await fetchFavoriteOrderIdsByOrderIds(orderIds)
+
+                if (isCancelled) {
+                    return
+                }
+
+                setFavoriteOrderIds(favoriteIds)
+            } catch (error) {
+                if (isCancelled) {
+                    return
+                }
+
+                const message = error instanceof Error ? error.message : 'Unable to load favorites.'
+                setFeedbackMessage({ type: 'error', text: message })
+            }
+        }
+
+        void loadFavorites()
+
+        return () => {
+            isCancelled = true
+        }
+    }, [orders])
+
+    useEffect(() => {
         if (!feedbackMessage) {
             return
         }
@@ -377,6 +540,11 @@ export function OrdersPageClient({ initialOrders }: OrdersPageClientProps) {
                         data={pendingOrders}
                         onChangeStatus={handleChangeOrderStatus}
                         onUpdateOrder={handleUpdateOrderLocally}
+                        favoriteOrderIds={favoriteOrderIds}
+                        pendingFavoriteOrderIds={pendingFavoriteOrderIds}
+                        onToggleFavorite={handleToggleFavorite}
+                        notesByOrderId={notesByOrderId}
+                        onSaveOrderNote={handleSaveOrderNote}
                         selectedOrderIds={selectedOrderIds}
                         onToggleOrderSelection={handleToggleOrderSelection}
                         onToggleSelectAllVisible={() =>
@@ -394,6 +562,11 @@ export function OrdersPageClient({ initialOrders }: OrdersPageClientProps) {
                         data={activeOrders}
                         onChangeStatus={handleChangeOrderStatus}
                         onUpdateOrder={handleUpdateOrderLocally}
+                        favoriteOrderIds={favoriteOrderIds}
+                        pendingFavoriteOrderIds={pendingFavoriteOrderIds}
+                        onToggleFavorite={handleToggleFavorite}
+                        notesByOrderId={notesByOrderId}
+                        onSaveOrderNote={handleSaveOrderNote}
                         selectedOrderIds={selectedOrderIds}
                         onToggleOrderSelection={handleToggleOrderSelection}
                         onToggleSelectAllVisible={() =>

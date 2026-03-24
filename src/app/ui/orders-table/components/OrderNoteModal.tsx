@@ -5,6 +5,7 @@ import { IoMdClose } from 'react-icons/io'
 type OrderNoteModalProps = {
     orderId: string | null
     noteDraft: string
+    isSaving: boolean
     onNoteDraftChange: (value: string) => void
     onSave: () => void
     onClose: () => void
@@ -13,6 +14,7 @@ type OrderNoteModalProps = {
 export function OrderNoteModal({
     orderId,
     noteDraft,
+    isSaving,
     onNoteDraftChange,
     onSave,
     onClose,
@@ -26,7 +28,11 @@ export function OrderNoteModal({
             className="add-order-modal-overlay"
             role="dialog"
             aria-modal="true"
-            onClick={onClose}
+            onClick={() => {
+                if (!isSaving) {
+                    onClose()
+                }
+            }}
         >
             <div
                 className="order-note-modal"
@@ -39,6 +45,7 @@ export function OrderNoteModal({
                         className="add-order-close-button"
                         onClick={onClose}
                         aria-label="Close order note modal"
+                        disabled={isSaving}
                     >
                         <IoMdClose size={20} />
                     </button>
@@ -50,14 +57,16 @@ export function OrderNoteModal({
                         onChange={(event) => onNoteDraftChange(event.target.value)}
                         placeholder="Write a note for this order"
                         aria-label="Order note"
+                        disabled={isSaving}
                         rows={5}
                     />
                     <button
                         type="button"
                         className="order-note-save-button"
                         onClick={onSave}
+                        disabled={isSaving}
                     >
-                        Save
+                        {isSaving ? 'Saving...' : 'Save'}
                     </button>
                 </div>
             </div>
