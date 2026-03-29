@@ -84,6 +84,28 @@
     scrollbar-color: rgba(56, 189, 248, 0.55) transparent;
   }
 
+  .add-order-date-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .add-order-status-row {
+    justify-content: stretch;
+
+    .add-order-field {
+      width: 100%;
+      align-items: stretch;
+
+      span {
+        text-align: left;
+      }
+
+      select {
+        text-align: left;
+        text-align-last: left;
+      }
+    }
+  }
+
   .add-order-modal {
     max-height: 80vh;
   }
@@ -119,6 +141,10 @@
   }
 
   .order-view-form {
+    grid-template-columns: 1fr;
+  }
+
+  .order-view-date-grid {
     grid-template-columns: 1fr;
   }
 

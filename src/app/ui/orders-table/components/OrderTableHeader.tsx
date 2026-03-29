@@ -55,8 +55,8 @@ export function OrderTableHeader({
                 </TableHead>
                 <TableHead>{renderSortHeader('oa_number', 'OA Number')}</TableHead>
                 <TableHead>{renderSortHeader('account_code', 'Account Code')}</TableHead>
-                <TableHead>{renderSortHeader('account_name', 'Account Name')}</TableHead>
                 <TableHead>{renderSortHeader('req_del_date', 'Req. Del Date')}</TableHead>
+                <TableHead>{renderSortHeader('wh_ship_date', 'WH Ship Date')}</TableHead>
                 <TableHead className="orders-status-head">
                     {renderSortHeader('status', 'Status')}
                 </TableHead>

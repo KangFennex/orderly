@@ -7,6 +7,28 @@
     0 2px 12px rgba(2, 6, 23, 0.22);
   overflow-x: auto;
   overflow-y: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(56, 189, 248, 0.72) rgba(15, 23, 42, 0.48);
+
+  &::-webkit-scrollbar {
+    height: 8px;
+    width: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: rgba(15, 23, 42, 0.5);
+    border-radius: 999px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    background: linear-gradient(90deg, rgba(56, 189, 248, 0.82), rgba(37, 99, 235, 0.86));
+    border: 1px solid rgba(14, 116, 144, 0.45);
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(90deg, rgba(125, 211, 252, 0.9), rgba(59, 130, 246, 0.92));
+  }
 }
 
 .orders-table-section {

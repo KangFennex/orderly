@@ -34,3 +34,14 @@ export {
     formatStatusLabel,
     getStatusRowClassName,
 } from './formatters'
+export {
+    formatDateForCopy,
+    buildSelectedOrdersPlainText,
+    buildSelectedOrdersCsv,
+} from './copy'
+export {
+    toggleOrderSelectionIds,
+    toggleSelectAllVisibleOrderIds,
+    areAllVisibleOrderIdsSelected,
+    getSelectedOrdersByIds,
+} from './selection'

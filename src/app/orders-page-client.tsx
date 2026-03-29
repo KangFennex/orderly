@@ -1,10 +1,30 @@
 "use client"
 
 import { useEffect, useState } from 'react'
-import { fetchFavoriteOrderIdsByOrderIds, setOrderFavorite } from '@/app/lib/order-favorites'
-import { fetchOrderNotesByOrderIds, saveOrderNote, type OrderNotesMap } from '@/app/lib/order-notes'
 import {
+    addPendingFavoriteOrderId,
+    fetchFavoriteOrderIdsByOrderIds,
+    hasFavoriteOrderId,
+    removePendingFavoriteOrderId,
+    setOrderFavorite,
+    upsertFavoriteOrderId,
+} from '@/app/lib/order-favorites'
+import {
+    fetchOrderNotesByOrderIds,
+    getOrderNoteValue,
+    saveOrderNote,
+    type OrderNotesMap,
+    upsertOrderNoteValue,
+} from '@/app/lib/order-notes'
+import { getApiErrorMessage } from '@/app/lib/http/errors'
+import {
+    areAllVisibleOrderIdsSelected,
+    buildSelectedOrdersCsv,
+    buildSelectedOrdersPlainText,
     filterOrders,
+    getSelectedOrdersByIds,
+    toggleOrderSelectionIds,
+    toggleSelectAllVisibleOrderIds,
     updateOrderStatus,
     type DateFilterField,
     type DateRangeFilter,
@@ -82,8 +102,9 @@ export function OrdersPageClient({ initialOrders }: OrdersPageClientProps) {
             })
 
             if (!response.ok) {
-                const errorBody = (await response.json().catch(() => null)) as { error?: string } | null
-                throw new Error(errorBody?.error ?? 'Unable to update order status. Please try again.')
+                throw new Error(
+                    await getApiErrorMessage(response, 'Unable to update order status. Please try again.'),
+                )
             }
 
             const json = (await response.json()) as { order: Order }
@@ -125,8 +146,9 @@ export function OrdersPageClient({ initialOrders }: OrdersPageClientProps) {
             })
 
             if (!response.ok) {
-                const errorBody = (await response.json().catch(() => null)) as { error?: string } | null
-                throw new Error(errorBody?.error ?? 'Unable to update order. Please try again.')
+                throw new Error(
+                    await getApiErrorMessage(response, 'Unable to update order. Please try again.'),
+                )
             }
 
             const json = (await response.json()) as { order: Order }
@@ -144,27 +166,18 @@ export function OrdersPageClient({ initialOrders }: OrdersPageClientProps) {
     }
 
     const handleSaveOrderNote = async (orderId: string, note: string) => {
-        const previousNote = notesByOrderId[orderId] ?? ''
+        const previousNote = getOrderNoteValue(notesByOrderId, orderId)
 
-        setNotesByOrderId((prev) => ({
-            ...prev,
-            [orderId]: note,
-        }))
+        setNotesByOrderId((prev) => upsertOrderNoteValue(prev, orderId, note))
 
         try {
             const savedNote = await saveOrderNote(orderId, note)
 
-            setNotesByOrderId((prev) => ({
-                ...prev,
-                [orderId]: savedNote,
-            }))
+            setNotesByOrderId((prev) => upsertOrderNoteValue(prev, orderId, savedNote))
 
             return true
         } catch (error) {
-            setNotesByOrderId((prev) => ({
-                ...prev,
-                [orderId]: previousNote,
-            }))
+            setNotesByOrderId((prev) => upsertOrderNoteValue(prev, orderId, previousNote))
 
             const message = error instanceof Error ? error.message : 'Unable to save order note.'
             setFeedbackMessage({ type: 'error', text: message })
@@ -177,63 +190,29 @@ export function OrdersPageClient({ initialOrders }: OrdersPageClientProps) {
             return
         }
 
-        const isAlreadyFavorite = favoriteOrderIds.includes(orderId)
+        const isAlreadyFavorite = hasFavoriteOrderId(favoriteOrderIds, orderId)
         const nextIsFavorite = !isAlreadyFavorite
 
-        setPendingFavoriteOrderIds((prev) => [...prev, orderId])
+        setPendingFavoriteOrderIds((prev) => addPendingFavoriteOrderId(prev, orderId))
 
-        setFavoriteOrderIds((prev) => {
-            if (nextIsFavorite) {
-                if (prev.includes(orderId)) {
-                    return prev
-                }
-
-                return [...prev, orderId]
-            }
-
-            return prev.filter((id) => id !== orderId)
-        })
+        setFavoriteOrderIds((prev) => upsertFavoriteOrderId(prev, orderId, nextIsFavorite))
 
         try {
             const savedAsFavorite = await setOrderFavorite(orderId, nextIsFavorite)
 
-            setFavoriteOrderIds((prev) => {
-                if (savedAsFavorite) {
-                    if (prev.includes(orderId)) {
-                        return prev
-                    }
-
-                    return [...prev, orderId]
-                }
-
-                return prev.filter((id) => id !== orderId)
-            })
+            setFavoriteOrderIds((prev) => upsertFavoriteOrderId(prev, orderId, savedAsFavorite))
         } catch (error) {
-            setFavoriteOrderIds((prev) => {
-                if (isAlreadyFavorite) {
-                    if (prev.includes(orderId)) {
-                        return prev
-                    }
-
-                    return [...prev, orderId]
-                }
-
-                return prev.filter((id) => id !== orderId)
-            })
+            setFavoriteOrderIds((prev) => upsertFavoriteOrderId(prev, orderId, isAlreadyFavorite))
 
             const message = error instanceof Error ? error.message : 'Unable to update favorite.'
             setFeedbackMessage({ type: 'error', text: message })
         } finally {
-            setPendingFavoriteOrderIds((prev) => prev.filter((id) => id !== orderId))
+            setPendingFavoriteOrderIds((prev) => removePendingFavoriteOrderId(prev, orderId))
         }
     }
 
     const handleToggleOrderSelection = (orderId: string) => {
-        setSelectedOrderIds((prev) =>
-            prev.includes(orderId)
-                ? prev.filter((id) => id !== orderId)
-                : [...prev, orderId],
-        )
+        setSelectedOrderIds((prev) => toggleOrderSelectionIds(prev, orderId))
     }
 
     const filteredOrders = filterOrders({
@@ -247,70 +226,27 @@ export function OrdersPageClient({ initialOrders }: OrdersPageClientProps) {
     const pendingOrders = filteredOrders.filter((order) => order.status === 'pending')
     const activeOrders = filteredOrders.filter((order) => order.status !== 'pending')
 
-    const toggleSelectAllVisible = (visibleOrderIds: string[], areAllVisibleSelected: boolean) => {
-        setSelectedOrderIds((prev) => {
-            if (areAllVisibleSelected) {
-                return prev.filter((id) => !visibleOrderIds.includes(id))
-            }
-
-            const merged = new Set([...prev, ...visibleOrderIds])
-            return Array.from(merged)
-        })
-    }
-
     const pendingVisibleOrderIds = pendingOrders.map((order) => order.id)
-    const areAllPendingVisibleSelected =
-        pendingVisibleOrderIds.length > 0 &&
-        pendingVisibleOrderIds.every((id) => selectedOrderIds.includes(id))
+    const areAllPendingVisibleSelected = areAllVisibleOrderIdsSelected(
+        selectedOrderIds,
+        pendingVisibleOrderIds,
+    )
 
     const activeVisibleOrderIds = activeOrders.map((order) => order.id)
-    const areAllActiveVisibleSelected =
-        activeVisibleOrderIds.length > 0 &&
-        activeVisibleOrderIds.every((id) => selectedOrderIds.includes(id))
-
-    const formatDateForCopy = (dateValue: string | null | undefined) => {
-        if (!dateValue) {
-            return '-'
-        }
-
-        if (/^\d{4}-\d{2}-\d{2}$/.test(dateValue)) {
-            const [year, month, day] = dateValue.split('-')
-            return `${month}/${day}/${year}`
-        }
-
-        const parsedDate = new Date(dateValue)
-
-        if (Number.isNaN(parsedDate.getTime())) {
-            return dateValue
-        }
-
-        return new Intl.DateTimeFormat('en-US', {
-            month: '2-digit',
-            day: '2-digit',
-            year: 'numeric',
-        }).format(parsedDate)
-    }
+    const areAllActiveVisibleSelected = areAllVisibleOrderIdsSelected(
+        selectedOrderIds,
+        activeVisibleOrderIds,
+    )
 
     const handleCopySelected = async () => {
-        const selectedOrders = orders.filter((order) => selectedOrderIds.includes(order.id))
+        const selectedOrders = getSelectedOrdersByIds(orders, selectedOrderIds)
 
         if (selectedOrders.length === 0) {
             setFeedbackMessage({ type: 'error', text: 'No orders selected to copy.' })
             return
         }
 
-        const plainText = selectedOrders
-            .map((order) =>
-                [
-                    `OA ${order.oa_number ?? '-'}`,
-                    `Account ${order.account_code}`,
-                    order.account_name ?? '-',
-                    `Status ${order.status}`,
-                    `Req Ship ${formatDateForCopy(order.req_ship_date)}`,
-                    `Req Del ${formatDateForCopy(order.req_del_date)}`,
-                ].join(' | '),
-            )
-            .join('\n')
+        const plainText = buildSelectedOrdersPlainText(selectedOrders)
 
         try {
             await navigator.clipboard.writeText(plainText)
@@ -320,37 +256,15 @@ export function OrdersPageClient({ initialOrders }: OrdersPageClientProps) {
         }
     }
 
-    const escapeCsvValue = (value: string) => {
-        const escaped = value.replaceAll('"', '""')
-        return `"${escaped}"`
-    }
-
     const handleCopySelectedCsv = async () => {
-        const selectedOrders = orders.filter((order) => selectedOrderIds.includes(order.id))
+        const selectedOrders = getSelectedOrdersByIds(orders, selectedOrderIds)
 
         if (selectedOrders.length === 0) {
             setFeedbackMessage({ type: 'error', text: 'No orders selected to copy.' })
             return
         }
 
-        const header = ['OA Number', 'Account Code', 'Account Name', 'Status', 'Req Ship Date', 'Req Del Date']
-            .map(escapeCsvValue)
-            .join(',')
-
-        const rows = selectedOrders.map((order) =>
-            [
-                order.oa_number ?? '-',
-                order.account_code,
-                order.account_name ?? '-',
-                order.status,
-                formatDateForCopy(order.req_ship_date),
-                formatDateForCopy(order.req_del_date),
-            ]
-                .map((value) => escapeCsvValue(String(value)))
-                .join(','),
-        )
-
-        const csvText = [header, ...rows].join('\n')
+        const csvText = buildSelectedOrdersCsv(selectedOrders)
 
         try {
             await navigator.clipboard.writeText(csvText)
@@ -548,7 +462,13 @@ export function OrdersPageClient({ initialOrders }: OrdersPageClientProps) {
                         selectedOrderIds={selectedOrderIds}
                         onToggleOrderSelection={handleToggleOrderSelection}
                         onToggleSelectAllVisible={() =>
-                            toggleSelectAllVisible(pendingVisibleOrderIds, areAllPendingVisibleSelected)
+                            setSelectedOrderIds((prev) =>
+                                toggleSelectAllVisibleOrderIds(
+                                    prev,
+                                    pendingVisibleOrderIds,
+                                    areAllPendingVisibleSelected,
+                                ),
+                            )
                         }
                         areAllVisibleSelected={areAllPendingVisibleSelected}
                         externalOrderToView={pendingFavoriteOrderToView}
@@ -570,7 +490,13 @@ export function OrdersPageClient({ initialOrders }: OrdersPageClientProps) {
                         selectedOrderIds={selectedOrderIds}
                         onToggleOrderSelection={handleToggleOrderSelection}
                         onToggleSelectAllVisible={() =>
-                            toggleSelectAllVisible(activeVisibleOrderIds, areAllActiveVisibleSelected)
+                            setSelectedOrderIds((prev) =>
+                                toggleSelectAllVisibleOrderIds(
+                                    prev,
+                                    activeVisibleOrderIds,
+                                    areAllActiveVisibleSelected,
+                                ),
+                            )
                         }
                         areAllVisibleSelected={areAllActiveVisibleSelected}
                         externalOrderToView={activeFavoriteOrderToView}

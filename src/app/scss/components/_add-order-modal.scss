@@ -91,6 +91,76 @@
   }
 }
 
+.add-order-date-grid {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.9rem;
+}
+
+.add-order-date-input-group {
+  position: relative;
+  display: flex;
+  align-items: center;
+
+  input {
+    padding-right: 2.55rem;
+  }
+}
+
+.add-order-date-picker-button {
+  position: absolute;
+  right: 0.4rem;
+  width: 1.8rem;
+  height: 1.8rem;
+  border: none;
+  border-radius: 0.45rem;
+  background: rgba(56, 189, 248, 0.16);
+  color: #e0f2fe;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.95rem;
+
+  &:hover {
+    background: rgba(56, 189, 248, 0.26);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2);
+  }
+}
+
+.add-order-date-native-input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.add-order-status-row {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: center;
+
+  .add-order-field {
+    width: min(100%, 16rem);
+    align-items: center;
+
+    span {
+      text-align: center;
+    }
+
+    select {
+      text-align: center;
+      text-align-last: center;
+    }
+  }
+}
+
 .add-order-actions {
   grid-column: 1 / -1;
   display: flex;

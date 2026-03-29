@@ -75,6 +75,56 @@
   }
 }
 
+.order-view-date-grid {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem 0.7rem;
+}
+
+.order-view-date-input-group {
+  position: relative;
+  display: flex;
+  align-items: center;
+
+  input {
+    padding-right: 2.45rem;
+  }
+}
+
+.order-view-date-picker-button {
+  position: absolute;
+  right: 0.4rem;
+  width: 1.75rem;
+  height: 1.75rem;
+  border: none;
+  border-radius: 0.45rem;
+  background: rgba(56, 189, 248, 0.16);
+  color: #e0f2fe;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.92rem;
+
+  &:hover {
+    background: rgba(56, 189, 248, 0.26);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2);
+  }
+}
+
+.order-view-date-native-input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
 .order-view-actions {
   grid-column: 1 / -1;
   display: flex;

@@ -21,5 +21,5 @@ export function getNextOrderStatus(currentStatus: OrderStatus) {
 }
 
 export function canTransitionOrderStatus(currentStatus: OrderStatus, nextStatus: OrderStatus) {
-    return orderStatusTransitions[currentStatus]?.includes(nextStatus) ?? false
+    return currentStatus !== nextStatus
 }

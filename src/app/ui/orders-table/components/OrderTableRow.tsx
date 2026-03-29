@@ -66,8 +66,8 @@ export function OrderTableRow({
                 />
                 <TableCell>{order.oa_number ?? '-'}</TableCell>
                 <TableCell>{order.account_code}</TableCell>
-                <TableCell>{order.account_name ?? '-'}</TableCell>
                 <TableCell>{formatDate(order.req_del_date)}</TableCell>
+                <TableCell>{formatDate(order.wh_ship_date)}</TableCell>
                 <OrderStatusCell
                     orderId={order.id}
                     status={order.status}

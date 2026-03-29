@@ -1,3 +1,5 @@
+import { getApiErrorMessage } from '@/app/lib/http/errors'
+
 export type OrderNotesMap = Record<string, string>
 
 type OrderNoteResponse = {
@@ -13,8 +15,7 @@ export async function fetchOrderNotesByOrderIds(orderIds: string[]): Promise<Ord
     const response = await fetch(`/api/orders/notes?orderIds=${encodeURIComponent(orderIds.join(','))}`)
 
     if (!response.ok) {
-        const errorBody = (await response.json().catch(() => null)) as { error?: string } | null
-        throw new Error(errorBody?.error ?? 'Unable to load order notes.')
+        throw new Error(await getApiErrorMessage(response, 'Unable to load order notes.'))
     }
 
     const json = (await response.json()) as { notes?: OrderNoteResponse[] }
@@ -36,8 +37,7 @@ export async function saveOrderNote(orderId: string, note: string): Promise<stri
     })
 
     if (!response.ok) {
-        const errorBody = (await response.json().catch(() => null)) as { error?: string } | null
-        throw new Error(errorBody?.error ?? 'Unable to save order note.')
+        throw new Error(await getApiErrorMessage(response, 'Unable to save order note.'))
     }
 
     const json = (await response.json()) as { note?: OrderNoteResponse }

@@ -1,7 +1,8 @@
 'use client'
 
+import { useEffect, useRef, useState } from 'react'
 import { IoMdClose } from 'react-icons/io'
-import { orderStatusOptions } from '@/app/lib/orders'
+import { formatUsDateInput, orderStatusOptions, toIsoDate } from '@/app/lib/orders'
 import type { Order } from '@/app/types/orders'
 
 export type OrderEditDraft = {
@@ -30,6 +31,107 @@ type OrderViewModalProps = {
     ) => void
     onSubmit: (event: React.FormEvent) => Promise<void>
     onClose: () => void
+}
+
+const toUsDateFromIso = (isoDate: string) => {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(isoDate)) {
+        return ''
+    }
+
+    const [year, month, day] = isoDate.split('-')
+    return `${month}/${day}/${year}`
+}
+
+type OrderViewDateFieldProps = {
+    label: string
+    value: string
+    onChange: (value: string) => void
+}
+
+function OrderViewDateField({ label, value, onChange }: OrderViewDateFieldProps) {
+    const [textValue, setTextValue] = useState(toUsDateFromIso(value))
+    const nativeDateInputRef = useRef<HTMLInputElement | null>(null)
+
+    useEffect(() => {
+        setTextValue(toUsDateFromIso(value))
+    }, [value])
+
+    const handleTextInputChange = (nextRawValue: string) => {
+        const formattedValue = formatUsDateInput(nextRawValue)
+        setTextValue(formattedValue)
+
+        if (!formattedValue.trim()) {
+            onChange('')
+            return
+        }
+
+        const isoDate = toIsoDate(formattedValue)
+
+        if (isoDate) {
+            onChange(isoDate)
+        }
+    }
+
+    const openCalendar = () => {
+        const nativeInputElement = nativeDateInputRef.current
+
+        if (!nativeInputElement) {
+            return
+        }
+
+        nativeInputElement.value = value
+
+        if (typeof nativeInputElement.showPicker === 'function') {
+            nativeInputElement.showPicker()
+            return
+        }
+
+        nativeInputElement.focus()
+        nativeInputElement.click()
+    }
+
+    const handleNativeDateChange = () => {
+        const nativeInputElement = nativeDateInputRef.current
+
+        if (!nativeInputElement) {
+            return
+        }
+
+        const selectedIsoDate = nativeInputElement.value
+        onChange(selectedIsoDate)
+        setTextValue(toUsDateFromIso(selectedIsoDate))
+    }
+
+    return (
+        <label className="order-view-field">
+            <span>{label}</span>
+            <div className="order-view-date-input-group">
+                <input
+                    type="text"
+                    value={textValue}
+                    placeholder="MM/DD/YYYY"
+                    inputMode="numeric"
+                    onChange={(event) => handleTextInputChange(event.target.value)}
+                />
+                <button
+                    type="button"
+                    className="order-view-date-picker-button"
+                    aria-label={`Open calendar for ${label}`}
+                    onClick={openCalendar}
+                >
+                    📅
+                </button>
+                <input
+                    ref={nativeDateInputRef}
+                    type="date"
+                    tabIndex={-1}
+                    aria-hidden="true"
+                    className="order-view-date-native-input"
+                    onChange={handleNativeDateChange}
+                />
+            </div>
+        </label>
+    )
 }
 
 export function OrderViewModal({
@@ -126,76 +228,43 @@ export function OrderViewModal({
                                 ))}
                             </select>
                         </label>
-                        <label className="order-view-field">
-                            <span>Order Date</span>
-                            <input
-                                type="date"
-                                value={orderEditDraft.order_date}
-                                onChange={(event) =>
-                                    onFieldChange('order_date', event.target.value)
-                                }
-                            />
-                        </label>
-                        <label className="order-view-field">
-                            <span>Req. Pick Date</span>
-                            <input
-                                type="date"
+                        <OrderViewDateField
+                            label="Order Date"
+                            value={orderEditDraft.order_date}
+                            onChange={(value) => onFieldChange('order_date', value)}
+                        />
+                        <div className="order-view-date-grid">
+                            <OrderViewDateField
+                                label="Req. Pick Date"
                                 value={orderEditDraft.req_pick_date}
-                                onChange={(event) =>
-                                    onFieldChange('req_pick_date', event.target.value)
-                                }
+                                onChange={(value) => onFieldChange('req_pick_date', value)}
                             />
-                        </label>
-                        <label className="order-view-field">
-                            <span>Req. Ship Date</span>
-                            <input
-                                type="date"
-                                value={orderEditDraft.req_ship_date}
-                                onChange={(event) =>
-                                    onFieldChange('req_ship_date', event.target.value)
-                                }
-                            />
-                        </label>
-                        <label className="order-view-field">
-                            <span>Req. Del Date</span>
-                            <input
-                                type="date"
-                                value={orderEditDraft.req_del_date}
-                                onChange={(event) =>
-                                    onFieldChange('req_del_date', event.target.value)
-                                }
-                            />
-                        </label>
-                        <label className="order-view-field">
-                            <span>WH Pick Date</span>
-                            <input
-                                type="date"
+                            <OrderViewDateField
+                                label="WH Pick Date"
                                 value={orderEditDraft.wh_pick_date}
-                                onChange={(event) =>
-                                    onFieldChange('wh_pick_date', event.target.value)
-                                }
+                                onChange={(value) => onFieldChange('wh_pick_date', value)}
                             />
-                        </label>
-                        <label className="order-view-field">
-                            <span>WH Ship Date</span>
-                            <input
-                                type="date"
+                            <OrderViewDateField
+                                label="Req. Ship Date"
+                                value={orderEditDraft.req_ship_date}
+                                onChange={(value) => onFieldChange('req_ship_date', value)}
+                            />
+                            <OrderViewDateField
+                                label="WH Ship Date"
                                 value={orderEditDraft.wh_ship_date}
-                                onChange={(event) =>
-                                    onFieldChange('wh_ship_date', event.target.value)
-                                }
+                                onChange={(value) => onFieldChange('wh_ship_date', value)}
                             />
-                        </label>
-                        <label className="order-view-field">
-                            <span>WH Del Date</span>
-                            <input
-                                type="date"
+                            <OrderViewDateField
+                                label="Req. Del Date"
+                                value={orderEditDraft.req_del_date}
+                                onChange={(value) => onFieldChange('req_del_date', value)}
+                            />
+                            <OrderViewDateField
+                                label="WH Del Date"
                                 value={orderEditDraft.wh_del_date}
-                                onChange={(event) =>
-                                    onFieldChange('wh_del_date', event.target.value)
-                                }
+                                onChange={(value) => onFieldChange('wh_del_date', value)}
                             />
-                        </label>
+                        </div>
                         <label className="order-view-field">
                             <span>Created At</span>
                             <input

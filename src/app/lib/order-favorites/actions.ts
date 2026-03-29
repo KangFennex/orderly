@@ -1,3 +1,5 @@
+import { getApiErrorMessage } from '@/app/lib/http/errors'
+
 type OrderFavoriteResponse = {
     order_id: string
 }
@@ -10,8 +12,7 @@ export async function fetchFavoriteOrderIdsByOrderIds(orderIds: string[]): Promi
     const response = await fetch(`/api/orders/favorites?orderIds=${encodeURIComponent(orderIds.join(','))}`)
 
     if (!response.ok) {
-        const errorBody = (await response.json().catch(() => null)) as { error?: string } | null
-        throw new Error(errorBody?.error ?? 'Unable to load favorites.')
+        throw new Error(await getApiErrorMessage(response, 'Unable to load favorites.'))
     }
 
     const json = (await response.json()) as { favorites?: OrderFavoriteResponse[] }
@@ -32,8 +33,7 @@ export async function setOrderFavorite(orderId: string, isFavorite: boolean): Pr
     })
 
     if (!response.ok) {
-        const errorBody = (await response.json().catch(() => null)) as { error?: string } | null
-        throw new Error(errorBody?.error ?? 'Unable to update favorite.')
+        throw new Error(await getApiErrorMessage(response, 'Unable to update favorite.'))
     }
 
     const json = (await response.json()) as { favorite?: OrderFavoriteResponse | null }

@@ -14,6 +14,10 @@ export function OrderDetailRow({ order }: OrderDetailRowProps) {
             <TableCell colSpan={6} className="orders-detail-cell">
                 <dl className="orders-detail-list">
                     <div className="orders-detail-item">
+                        <dt>Account Name</dt>
+                        <dd>{order.account_name ?? '-'}</dd>
+                    </div>
+                    <div className="orders-detail-item">
                         <dt>Client PO</dt>
                         <dd>{order.client_po ?? '-'}</dd>
                     </div>
@@ -32,10 +36,6 @@ export function OrderDetailRow({ order }: OrderDetailRowProps) {
                     <div className="orders-detail-item">
                         <dt>WH Pick Date</dt>
                         <dd>{formatDate(order.wh_pick_date)}</dd>
-                    </div>
-                    <div className="orders-detail-item">
-                        <dt>WH Ship Date</dt>
-                        <dd>{formatDate(order.wh_ship_date)}</dd>
                     </div>
                     <div className="orders-detail-item">
                         <dt>WH Del Date</dt>

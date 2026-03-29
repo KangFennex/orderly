@@ -1,8 +1,9 @@
 'use client'
 
-import { type FormEvent, useState } from 'react'
+import { type FormEvent, type MouseEvent, useState } from 'react'
 import { IoMdClose } from 'react-icons/io'
 import type { Order } from '@/app/types/orders'
+import { getApiErrorMessage } from '@/app/lib/http/errors'
 import {
     addOrderDateFieldNames,
     buildCreateOrderPayload,
@@ -11,6 +12,7 @@ import {
     orderStatusOptions,
 } from '@/app/lib/orders'
 import {
+    OrderFormDateField,
     OrderFormInputField,
     OrderFormSelectField,
 } from '@/app/ui/add-order-modal/components/order-form-field'
@@ -84,12 +86,7 @@ export function AddOrderModal({
             })
 
             if (!response.ok) {
-                const errorJson = (await response.json().catch(() => null)) as
-                    | { error?: string }
-                    | null
-                throw new Error(
-                    errorJson?.error?.trim() || 'Unable to create order. Please try again.',
-                )
+                throw new Error(await getApiErrorMessage(response, 'Unable to create order. Please try again.'))
             }
 
             const json = (await response.json()) as { order: Order }
@@ -117,6 +114,10 @@ export function AddOrderModal({
         }
     }
 
+    const handleOverlayClick = (event: MouseEvent<HTMLDivElement>) => {
+        event.stopPropagation()
+    }
+
     if (!isOpen) {
         return null
     }
@@ -126,8 +127,9 @@ export function AddOrderModal({
             className="add-order-modal-overlay"
             role="dialog"
             aria-modal="true"
+            onClick={handleOverlayClick}
         >
-            <div className="add-order-modal" onClick={(event) => event.stopPropagation()}>
+            <div className="add-order-modal">
                 <div className="add-order-modal-header">
                     <h2 className="add-order-modal-title">Add Order</h2>
                     <button
@@ -170,69 +172,66 @@ export function AddOrderModal({
                         placeholder="Enter account name"
                     />
 
-                    <OrderFormInputField
+                    <OrderFormDateField
                         label="Order Date"
-                        type="text"
                         name="order_date"
                         placeholder="MM/DD/YYYY"
                         inputMode="numeric"
                     />
 
-                    <OrderFormInputField
-                        label="Req. Delivery Date"
-                        type="text"
-                        name="requested_delivery_date"
-                        placeholder="MM/DD/YYYY"
-                        inputMode="numeric"
-                    />
+                    <div className="add-order-date-grid">
+                        <OrderFormDateField
+                            label="Req. Delivery Date"
+                            name="requested_delivery_date"
+                            placeholder="MM/DD/YYYY"
+                            inputMode="numeric"
+                        />
 
-                    <OrderFormInputField
-                        label="Req. Pick Date"
-                        type="text"
-                        name="req_pick_date"
-                        placeholder="MM/DD/YYYY"
-                        inputMode="numeric"
-                    />
+                        <OrderFormDateField
+                            label="WH Pick Date"
+                            name="wh_pick_date"
+                            placeholder="MM/DD/YYYY"
+                            inputMode="numeric"
+                        />
 
-                    <OrderFormInputField
-                        label="Req. Ship Date"
-                        type="text"
-                        name="requested_ship_date"
-                        placeholder="MM/DD/YYYY"
-                        inputMode="numeric"
-                    />
+                        <OrderFormDateField
+                            label="Req. Pick Date"
+                            name="req_pick_date"
+                            placeholder="MM/DD/YYYY"
+                            inputMode="numeric"
+                        />
 
-                    <OrderFormInputField
-                        label="WH Pick Date"
-                        type="text"
-                        name="wh_pick_date"
-                        placeholder="MM/DD/YYYY"
-                        inputMode="numeric"
-                    />
+                        <OrderFormDateField
+                            label="WH Ship Date"
+                            name="wh_ship_date"
+                            placeholder="MM/DD/YYYY"
+                            inputMode="numeric"
+                        />
 
-                    <OrderFormInputField
-                        label="WH Ship Date"
-                        type="text"
-                        name="wh_ship_date"
-                        placeholder="MM/DD/YYYY"
-                        inputMode="numeric"
-                    />
+                        <OrderFormDateField
+                            label="Req. Ship Date"
+                            name="requested_ship_date"
+                            placeholder="MM/DD/YYYY"
+                            inputMode="numeric"
+                        />
 
-                    <OrderFormInputField
-                        label="WH Del Date"
-                        type="text"
-                        name="wh_del_date"
-                        placeholder="MM/DD/YYYY"
-                        inputMode="numeric"
-                    />
+                        <OrderFormDateField
+                            label="WH Del Date"
+                            name="wh_del_date"
+                            placeholder="MM/DD/YYYY"
+                            inputMode="numeric"
+                        />
+                    </div>
 
-                    <OrderFormSelectField label="Status" name="status" defaultValue="pending">
-                        {orderStatusOptions.map((option) => (
-                            <option key={option.value} value={option.value}>
-                                {option.label}
-                            </option>
-                        ))}
-                    </OrderFormSelectField>
+                    <div className="add-order-status-row">
+                        <OrderFormSelectField label="Status" name="status" defaultValue="pending">
+                            {orderStatusOptions.map((option) => (
+                                <option key={option.value} value={option.value}>
+                                    {option.label}
+                                </option>
+                            ))}
+                        </OrderFormSelectField>
+                    </div>
 
                     <div className="add-order-actions">
                         <button type="reset" className="add-order-clear-button">
