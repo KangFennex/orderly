@@ -25,9 +25,12 @@ type OrdersDataTableProps = {
     data: Order[]
     onChangeStatus: (orderId: string, nextStatus: Order['status']) => void
     onUpdateOrder: (orderId: string, updates: Partial<Order>) => Promise<boolean>
-    favoriteOrderIds: string[]
-    pendingFavoriteOrderIds: string[]
-    onToggleFavorite: (orderId: string) => void
+    favouriteOrderIds: string[]
+    pendingFavouriteOrderIds: string[]
+    onToggleFavourite: (orderId: string) => void
+    customReminderOrderIds: string[]
+    onSetCustomReminder: (order: Order, remindAt: string) => void
+    onClearCustomReminder: (orderId: string) => void
     notesByOrderId: OrderNotesMap
     onSaveOrderNote: (orderId: string, note: string) => Promise<boolean>
     selectedOrderIds: string[]
@@ -42,9 +45,12 @@ export function OrdersDataTable({
     data,
     onChangeStatus,
     onUpdateOrder,
-    favoriteOrderIds,
-    pendingFavoriteOrderIds,
-    onToggleFavorite,
+    favouriteOrderIds,
+    pendingFavouriteOrderIds,
+    onToggleFavourite,
+    customReminderOrderIds,
+    onSetCustomReminder,
+    onClearCustomReminder,
     notesByOrderId,
     onSaveOrderNote,
     selectedOrderIds,
@@ -57,7 +63,7 @@ export function OrdersDataTable({
     'use no memo'
     const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({})
     const [sorting, setSorting] = useState<SortingState>([])
-    const [activeNoteOrderId, setActiveNoteOrderId] = useState<string | null>(null)
+    const [activeNoteOrder, setActiveNoteOrder] = useState<Order | null>(null)
     const [noteDraft, setNoteDraft] = useState('')
     const [isSavingNote, setIsSavingNote] = useState(false)
     const [activeViewOrder, setActiveViewOrder] = useState<Order | null>(null)
@@ -83,7 +89,7 @@ export function OrdersDataTable({
     }
 
     const closeOrderNoteModal = () => {
-        setActiveNoteOrderId(null)
+        setActiveNoteOrder(null)
         setNoteDraft('')
     }
 
@@ -274,7 +280,7 @@ export function OrdersDataTable({
     }
 
     const saveOrderNote = async () => {
-        if (!activeNoteOrderId || isSavingNote) {
+        if (!activeNoteOrder || isSavingNote) {
             return
         }
 
@@ -283,7 +289,7 @@ export function OrdersDataTable({
         let didSave = false
 
         try {
-            didSave = await onSaveOrderNote(activeNoteOrderId, noteDraft)
+            didSave = await onSaveOrderNote(activeNoteOrder.id, noteDraft)
         } finally {
             setIsSavingNote(false)
         }
@@ -293,9 +299,9 @@ export function OrdersDataTable({
         }
     }
 
-    const openOrderNoteModal = (orderId: string) => {
-        setActiveNoteOrderId(orderId)
-        setNoteDraft(notesByOrderId[orderId] ?? '')
+    const openOrderNoteModal = (order: Order) => {
+        setActiveNoteOrder(order)
+        setNoteDraft(notesByOrderId[order.id] ?? '')
     }
 
     useEffect(() => {
@@ -328,8 +334,9 @@ export function OrdersDataTable({
                 <TableBody>
                     {table.getRowModel().rows.length ? (
                         table.getRowModel().rows.map((row) => {
-                            const isFavorite = favoriteOrderIds.includes(row.original.id)
-                            const isFavoriteActionPending = pendingFavoriteOrderIds.includes(row.original.id)
+                            const isFavourite = favouriteOrderIds.includes(row.original.id)
+                            const isFavouriteActionPending = pendingFavouriteOrderIds.includes(row.original.id)
+                            const hasCustomReminder = customReminderOrderIds.includes(row.original.id)
                             const hasOrderNote =
                                 (notesByOrderId[row.original.id] ?? '').trim().length > 0
                             const isSelected = selectedOrderIds.includes(row.original.id)
@@ -342,12 +349,15 @@ export function OrdersDataTable({
                                     rowId={row.id}
                                     isExpanded={isExpanded}
                                     isSelected={isSelected}
-                                    isFavorite={isFavorite}
-                                    isFavoriteActionPending={isFavoriteActionPending}
+                                    isFavourite={isFavourite}
+                                    isFavouriteActionPending={isFavouriteActionPending}
+                                    hasCustomReminder={hasCustomReminder}
                                     hasOrderNote={hasOrderNote}
                                     onToggleExpand={toggleRow}
                                     onToggleSelection={onToggleOrderSelection}
-                                    onToggleFavorite={onToggleFavorite}
+                                    onToggleFavourite={onToggleFavourite}
+                                    onSetCustomReminder={onSetCustomReminder}
+                                    onClearCustomReminder={onClearCustomReminder}
                                     onOpenNoteModal={openOrderNoteModal}
                                     onOpenViewModal={openOrderViewModal}
                                     onChangeStatus={onChangeStatus}
@@ -365,7 +375,9 @@ export function OrdersDataTable({
             </Table>
 
             <OrderNoteModal
-                orderId={activeNoteOrderId}
+                orderId={activeNoteOrder?.id ?? null}
+                accountCode={activeNoteOrder?.account_code ?? ''}
+                oaNumber={activeNoteOrder?.oa_number ?? null}
                 noteDraft={noteDraft}
                 isSaving={isSavingNote}
                 onNoteDraftChange={setNoteDraft}

@@ -4,6 +4,7 @@ import { FaRegCopy } from 'react-icons/fa'
 import { IoMdAdd, IoMdCheckmark } from 'react-icons/io';
 import { IoIosRefresh } from "react-icons/io";
 import { MdStarBorder } from "react-icons/md";
+import { AiOutlineBell } from 'react-icons/ai'
 import kitsuneLogo from '@/app/assets/logo/kitsune-logo.png'
 import {
     orderDateFieldOptions,
@@ -25,7 +26,8 @@ type OrdersHeroProps = {
     onSelectDateRange: (dateRange: DateRangeFilter | null) => void
     onClearFilters: () => void
     onOpenAddOrderModal: () => void
-    onOpenFavoritesModal: () => void
+    onOpenFavouritesModal: () => void
+    onOpenReminderTray: () => void
     onCopySelected: () => void
     onCopySelectedCsv: () => void
     selectedOrderCount: number
@@ -42,7 +44,8 @@ export function OrdersHero({
     onSelectDateRange,
     onClearFilters,
     onOpenAddOrderModal,
-    onOpenFavoritesModal,
+    onOpenFavouritesModal,
+    onOpenReminderTray,
     onCopySelected,
     onCopySelectedCsv,
     selectedOrderCount,
@@ -151,6 +154,22 @@ export function OrdersHero({
             <div className="orders-hero-actions">
                 <div className="orders-hero-actions-grid">
                     <button
+                        className="add-order-button"
+                        type="button"
+                        onClick={onOpenAddOrderModal}
+                        aria-label="Open add order modal"
+                    >
+                        <IoMdAdd size={36} color="#f8fafc" />
+                    </button>
+                    <button
+                        className="orders-clear-filters-button"
+                        type="button"
+                        onClick={onOpenReminderTray}
+                        aria-label="Open reminders tray"
+                    >
+                        <AiOutlineBell size={18} />
+                    </button>
+                    <button
                         className="orders-clear-filters-button"
                         type="button"
                         onClick={handleClearFilters}
@@ -169,20 +188,10 @@ export function OrdersHero({
                     <button
                         className="orders-clear-filters-button"
                         type="button"
-                        onClick={onOpenFavoritesModal}
-                        aria-label="Open favorites modal"
+                        onClick={onOpenFavouritesModal}
+                        aria-label="Open favourites modal"
                     >
                         <MdStarBorder size={20} />
-                    </button>
-                    <button
-                        className="orders-clear-filters-button"
-                        type="button"
-                        onClick={onCopySelected}
-                        aria-label="Copy selected orders"
-                        disabled={selectedOrderCount === 0}
-                    >
-                        <FaRegCopy size={16} />
-                        <span>{selectedOrderCount}</span>
                     </button>
                     <button
                         className="orders-clear-filters-button"
@@ -193,15 +202,15 @@ export function OrdersHero({
                     >
                         CSV
                     </button>
-                </div>
-                <div className="orders-hero-add-action">
                     <button
-                        className="add-order-button"
+                        className="orders-clear-filters-button"
                         type="button"
-                        onClick={onOpenAddOrderModal}
-                        aria-label="Open add order modal"
+                        onClick={onCopySelected}
+                        aria-label="Copy selected orders"
+                        disabled={selectedOrderCount === 0}
                     >
-                        <IoMdAdd size={30} color="#f8fafc" />
+                        <FaRegCopy size={16} />
+                        <span>{selectedOrderCount}</span>
                     </button>
                 </div>
             </div>

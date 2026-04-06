@@ -13,13 +13,16 @@ type OrderTableRowProps = {
     rowId: string
     isExpanded: boolean
     isSelected: boolean
-    isFavorite: boolean
-    isFavoriteActionPending: boolean
+    isFavourite: boolean
+    isFavouriteActionPending: boolean
+    hasCustomReminder: boolean
     hasOrderNote: boolean
     onToggleExpand: (rowId: string) => void
     onToggleSelection: (orderId: string) => void
-    onToggleFavorite: (orderId: string) => void
-    onOpenNoteModal: (orderId: string) => void
+    onToggleFavourite: (orderId: string) => void
+    onSetCustomReminder: (order: Order, remindAt: string) => void
+    onClearCustomReminder: (orderId: string) => void
+    onOpenNoteModal: (order: Order) => void
     onOpenViewModal: (order: Order) => void
     onChangeStatus: (orderId: string, nextStatus: Order['status']) => void
 }
@@ -29,12 +32,15 @@ export function OrderTableRow({
     rowId,
     isExpanded,
     isSelected,
-    isFavorite,
-    isFavoriteActionPending,
+    isFavourite,
+    isFavouriteActionPending,
+    hasCustomReminder,
     hasOrderNote,
     onToggleExpand,
     onToggleSelection,
-    onToggleFavorite,
+    onToggleFavourite,
+    onSetCustomReminder,
+    onClearCustomReminder,
     onOpenNoteModal,
     onOpenViewModal,
     onChangeStatus,
@@ -53,15 +59,18 @@ export function OrderTableRow({
                     rowId={rowId}
                     oaNumber={order.oa_number}
                     isSelected={isSelected}
-                    isFavorite={isFavorite}
-                    isFavoriteActionPending={isFavoriteActionPending}
+                    isFavourite={isFavourite}
+                    isFavouriteActionPending={isFavouriteActionPending}
+                    hasCustomReminder={hasCustomReminder}
                     hasOrderNote={hasOrderNote}
                     isExpanded={isExpanded}
                     onToggleSelection={onToggleSelection}
                     onOpenViewModal={onOpenViewModal}
                     onToggleExpand={onToggleExpand}
                     onOpenNoteModal={onOpenNoteModal}
-                    onToggleFavorite={onToggleFavorite}
+                    onToggleFavourite={onToggleFavourite}
+                    onSetCustomReminder={onSetCustomReminder}
+                    onClearCustomReminder={onClearCustomReminder}
                     order={order}
                 />
                 <TableCell>{order.oa_number ?? '-'}</TableCell>

@@ -11,9 +11,15 @@
 
 .order-note-modal-header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   padding: 0.85rem 0.95rem 0.45rem;
+}
+
+.order-note-modal-header-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
 }
 
 .order-note-modal-title {
@@ -21,6 +27,30 @@
   font-size: 1rem;
   font-weight: 700;
   color: #f8fafc;
+}
+
+.order-note-modal-order-id {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.order-note-modal-account-code {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.1);
+  border: 1px solid rgba(56, 189, 248, 0.28);
+  border-radius: 0.35rem;
+  padding: 0.1rem 0.45rem;
+}
+
+.order-note-modal-oa-number {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #94a3b8;
 }
 
 .order-note-modal-content {

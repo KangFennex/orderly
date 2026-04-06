@@ -4,18 +4,18 @@ import type { DateRangeFilter } from '@/app/lib/orders/date-range'
 export const orderStatusOptions: { value: FilterStatus; label: string }[] = [
     { value: 'pending', label: 'Pending' },
     { value: 'picking', label: 'Picking' },
-    { value: 'shipped', label: 'Shipped' },
     { value: 'backorder', label: 'Backorder' },
+    { value: 'shipped', label: 'Shipped' },
     { value: 'cancelled', label: 'Cancelled' },
 ]
 
 export const orderDateFieldOptions: { value: DateFilterField; label: string }[] = [
+    { value: 'wh_ship_date', label: 'WH Ship Date' },
+    { value: 'wh_pick_date', label: 'WH Pick Date' },
+    { value: 'wh_del_date', label: 'WH Del Date' },
     { value: 'req_ship_date', label: 'Req. Ship Date' },
     { value: 'req_del_date', label: 'Req. Del Date' },
     { value: 'req_pick_date', label: 'Req. Pick Date' },
-    { value: 'wh_pick_date', label: 'WH Pick Date' },
-    { value: 'wh_ship_date', label: 'WH Ship Date' },
-    { value: 'wh_del_date', label: 'WH Del Date' },
     { value: 'order_date', label: 'Order Date' },
 ]
 

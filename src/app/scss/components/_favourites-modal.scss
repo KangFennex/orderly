@@ -1,13 +1,13 @@
-.favorites-modal-content {
+.favourites-modal-content {
   padding: 0.75rem 1rem 1rem;
 }
 
-.favorites-empty-state {
+.favourites-empty-state {
   margin: 0;
   color: #94a3b8;
 }
 
-.favorites-list {
+.favourites-list {
   list-style: none;
   margin: 0;
   padding: 0;
@@ -16,7 +16,7 @@
   gap: 0.5rem;
 }
 
-.favorites-list-item {
+.favourites-list-item {
   display: grid;
   grid-template-columns: 1fr 1fr 1.5fr auto;
   align-items: center;

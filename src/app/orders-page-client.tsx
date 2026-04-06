@@ -1,14 +1,15 @@
 "use client"
 
 import { useEffect, useState } from 'react'
+import { IoMdClose } from 'react-icons/io'
 import {
-    addPendingFavoriteOrderId,
-    fetchFavoriteOrderIdsByOrderIds,
-    hasFavoriteOrderId,
-    removePendingFavoriteOrderId,
-    setOrderFavorite,
-    upsertFavoriteOrderId,
-} from '@/app/lib/order-favorites'
+    addPendingFavouriteOrderId,
+    fetchFavouriteOrderIdsByOrderIds,
+    hasFavouriteOrderId,
+    removePendingFavouriteOrderId,
+    setOrderFavourite,
+    upsertFavouriteOrderId,
+} from '@/app/lib/order-favourites'
 import {
     fetchOrderNotesByOrderIds,
     getOrderNoteValue,
@@ -32,7 +33,7 @@ import {
 } from '@/app/lib/orders'
 import { OrdersDataTable } from '@/app/ui/orders-table'
 import { AddOrderModal } from '@/app/ui/add-order-modal'
-import { FavoritesModal } from '@/app/ui/favorites-modal'
+import { FavouritesModal } from '@/app/ui/favourites-modal'
 import { OrdersHero } from '@/app/ui/hero'
 import type { Order } from '@/app/types/orders'
 
@@ -45,22 +46,63 @@ type FeedbackMessage = {
     text: string
 }
 
+type CustomReminderByOrderId = Record<string, string>
+
+type ReminderCard = {
+    id: string
+    orderId: string
+    oaNumber: string | null
+    accountCode: string
+    type: 'urgent' | 'custom'
+    message: string
+    dateLabel: string
+}
+
+const CUSTOM_REMINDERS_STORAGE_KEY = 'orders.custom-reminders'
+const DISMISSED_REMINDERS_STORAGE_KEY = 'orders.dismissed-reminders'
+
+const MS_PER_DAY = 24 * 60 * 60 * 1000
+
+const getStartOfToday = () => {
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    return today
+}
+
+const getDateFromIso = (value: string) => {
+    const date = new Date(`${value}T00:00:00`)
+
+    if (Number.isNaN(date.getTime())) {
+        return null
+    }
+
+    date.setHours(0, 0, 0, 0)
+    return date
+}
+
+const getDaysBetween = (dateA: Date, dateB: Date) => {
+    return Math.floor((dateA.getTime() - dateB.getTime()) / MS_PER_DAY)
+}
+
 export function OrdersPageClient({ initialOrders }: OrdersPageClientProps) {
     const [isAddOrderModalOpen, setIsAddOrderModalOpen] = useState(false)
-    const [isFavoritesModalOpen, setIsFavoritesModalOpen] = useState(false)
-    const [pendingFavoriteOrderToView, setPendingFavoriteOrderToView] = useState<Order | null>(null)
-    const [activeFavoriteOrderToView, setActiveFavoriteOrderToView] = useState<Order | null>(null)
+    const [isFavouritesModalOpen, setIsFavouritesModalOpen] = useState(false)
+    const [isReminderTrayOpen, setIsReminderTrayOpen] = useState(false)
+    const [pendingFavouriteOrderToView, setPendingFavouriteOrderToView] = useState<Order | null>(null)
+    const [activeFavouriteOrderToView, setActiveFavouriteOrderToView] = useState<Order | null>(null)
     const [orders, setOrders] = useState(initialOrders)
     const [searchValue, setSearchValue] = useState('')
     const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('')
     const [feedbackMessage, setFeedbackMessage] = useState<FeedbackMessage | null>(null)
-    const [favoriteOrderIds, setFavoriteOrderIds] = useState<string[]>([])
-    const [pendingFavoriteOrderIds, setPendingFavoriteOrderIds] = useState<string[]>([])
+    const [favouriteOrderIds, setFavouriteOrderIds] = useState<string[]>([])
+    const [pendingFavouriteOrderIds, setPendingFavouriteOrderIds] = useState<string[]>([])
     const [notesByOrderId, setNotesByOrderId] = useState<OrderNotesMap>({})
     const [selectedStatuses, setSelectedStatuses] = useState<FilterStatus[]>(['pending', 'picking', 'backorder'])
-    const [selectedDateField, setSelectedDateField] = useState<DateFilterField>('req_ship_date')
+    const [selectedDateField, setSelectedDateField] = useState<DateFilterField>('wh_ship_date')
     const [selectedDateRange, setSelectedDateRange] = useState<DateRangeFilter | null>(null)
     const [selectedOrderIds, setSelectedOrderIds] = useState<string[]>([])
+    const [customReminderByOrderId, setCustomReminderByOrderId] = useState<CustomReminderByOrderId>({})
+    const [dismissedReminderIds, setDismissedReminderIds] = useState<string[]>([])
 
     const toggleStatus = (status: FilterStatus) => {
         setSelectedStatuses((prev) =>
@@ -185,34 +227,69 @@ export function OrdersPageClient({ initialOrders }: OrdersPageClientProps) {
         }
     }
 
-    const handleToggleFavorite = async (orderId: string) => {
-        if (pendingFavoriteOrderIds.includes(orderId)) {
+    const handleToggleFavourite = async (orderId: string) => {
+        if (pendingFavouriteOrderIds.includes(orderId)) {
             return
         }
 
-        const isAlreadyFavorite = hasFavoriteOrderId(favoriteOrderIds, orderId)
-        const nextIsFavorite = !isAlreadyFavorite
+        const isAlreadyFavourite = hasFavouriteOrderId(favouriteOrderIds, orderId)
+        const nextIsFavourite = !isAlreadyFavourite
 
-        setPendingFavoriteOrderIds((prev) => addPendingFavoriteOrderId(prev, orderId))
+        setPendingFavouriteOrderIds((prev) => addPendingFavouriteOrderId(prev, orderId))
 
-        setFavoriteOrderIds((prev) => upsertFavoriteOrderId(prev, orderId, nextIsFavorite))
+        setFavouriteOrderIds((prev) => upsertFavouriteOrderId(prev, orderId, nextIsFavourite))
 
         try {
-            const savedAsFavorite = await setOrderFavorite(orderId, nextIsFavorite)
+            const savedAsFavourite = await setOrderFavourite(orderId, nextIsFavourite)
 
-            setFavoriteOrderIds((prev) => upsertFavoriteOrderId(prev, orderId, savedAsFavorite))
+            setFavouriteOrderIds((prev) => upsertFavouriteOrderId(prev, orderId, savedAsFavourite))
         } catch (error) {
-            setFavoriteOrderIds((prev) => upsertFavoriteOrderId(prev, orderId, isAlreadyFavorite))
+            setFavouriteOrderIds((prev) => upsertFavouriteOrderId(prev, orderId, isAlreadyFavourite))
 
-            const message = error instanceof Error ? error.message : 'Unable to update favorite.'
+            const message = error instanceof Error ? error.message : 'Unable to update favourite.'
             setFeedbackMessage({ type: 'error', text: message })
         } finally {
-            setPendingFavoriteOrderIds((prev) => removePendingFavoriteOrderId(prev, orderId))
+            setPendingFavouriteOrderIds((prev) => removePendingFavouriteOrderId(prev, orderId))
         }
     }
 
     const handleToggleOrderSelection = (orderId: string) => {
         setSelectedOrderIds((prev) => toggleOrderSelectionIds(prev, orderId))
+    }
+
+    const handleDismissReminderCard = (reminderId: string) => {
+        setDismissedReminderIds((prev) => (prev.includes(reminderId) ? prev : [...prev, reminderId]))
+    }
+
+    const handleSetCustomReminder = (order: Order, remindAt: string) => {
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(remindAt)) {
+            setFeedbackMessage({ type: 'error', text: 'Select a valid reminder date.' })
+            return
+        }
+
+        setCustomReminderByOrderId((prev) => ({
+            ...prev,
+            [order.id]: remindAt,
+        }))
+
+        setDismissedReminderIds((prev) => prev.filter((id) => !id.startsWith(`${order.id}:custom:`)))
+
+        setFeedbackMessage({ type: 'success', text: `Reminder set for OA ${order.oa_number ?? order.id}.` })
+        setIsReminderTrayOpen(true)
+    }
+
+    const handleClearCustomReminder = (orderId: string) => {
+        setCustomReminderByOrderId((prev) => {
+            if (!(orderId in prev)) {
+                return prev
+            }
+
+            const next = { ...prev }
+            delete next[orderId]
+            return next
+        })
+
+        setDismissedReminderIds((prev) => prev.filter((id) => !id.startsWith(`${orderId}:custom:`)))
     }
 
     const filteredOrders = filterOrders({
@@ -237,6 +314,113 @@ export function OrdersPageClient({ initialOrders }: OrdersPageClientProps) {
         selectedOrderIds,
         activeVisibleOrderIds,
     )
+
+    const customReminderOrderIds = Object.keys(customReminderByOrderId).filter((orderId) =>
+        orders.some((order) => order.id === orderId && order.status !== 'shipped'),
+    )
+
+    const today = getStartOfToday()
+    const ordersById = new Map(orders.map((order) => [order.id, order]))
+
+    const urgentCards: ReminderCard[] = orders
+        .filter((order) => order.status !== 'shipped' && Boolean(order.wh_pick_date))
+        .flatMap((order) => {
+            const whPickDate = getDateFromIso(order.wh_pick_date ?? '')
+
+            if (!whPickDate) {
+                return []
+            }
+
+            const daysUntilPick = getDaysBetween(whPickDate, today)
+
+            if (daysUntilPick < 0 || daysUntilPick > 3) {
+                return []
+            }
+
+            const reminderId = `${order.id}:auto-wh-pick:${order.wh_pick_date}`
+            const dayText = daysUntilPick === 0 ? 'today' : `in ${daysUntilPick} day${daysUntilPick === 1 ? '' : 's'}`
+
+            return [
+                {
+                    id: reminderId,
+                    orderId: order.id,
+                    oaNumber: order.oa_number,
+                    accountCode: order.account_code,
+                    type: 'urgent' as const,
+                    message: `WH Pick is ${dayText}`,
+                    dateLabel: order.wh_pick_date ?? '',
+                },
+            ]
+        })
+
+    const customCards: ReminderCard[] = Object.entries(customReminderByOrderId).flatMap(([orderId, remindAt]) => {
+        const order = orders.find((item) => item.id === orderId)
+
+        if (!order || order.status === 'shipped') {
+            return []
+        }
+
+        const remindDate = getDateFromIso(remindAt)
+
+        if (!remindDate || remindDate.getTime() > today.getTime()) {
+            return []
+        }
+
+        return [
+            {
+                id: `${order.id}:custom:${remindAt}`,
+                orderId: order.id,
+                oaNumber: order.oa_number,
+                accountCode: order.account_code,
+                type: 'custom' as const,
+                message: 'Custom reminder',
+                dateLabel: remindAt,
+            },
+        ]
+    })
+
+    const getReminderSortDaysUntilWhShip = (reminder: ReminderCard) => {
+        const order = ordersById.get(reminder.orderId)
+        const whShipDate = getDateFromIso(order?.wh_ship_date ?? '')
+
+        if (!whShipDate) {
+            return Number.MAX_SAFE_INTEGER
+        }
+
+        return getDaysBetween(whShipDate, today)
+    }
+
+    const visibleReminderCards = [...urgentCards, ...customCards]
+        .filter((reminder) => !dismissedReminderIds.includes(reminder.id))
+        .sort((a, b) => {
+            const dayDifference = getReminderSortDaysUntilWhShip(a) - getReminderSortDaysUntilWhShip(b)
+
+            if (dayDifference !== 0) {
+                return dayDifference
+            }
+
+            return (a.oaNumber ?? '').localeCompare(b.oaNumber ?? '', undefined, {
+                numeric: true,
+                sensitivity: 'base',
+            })
+        })
+        .slice(0, 5)
+
+    const visibleReminderOrderIds = Array.from(new Set(visibleReminderCards.map((reminder) => reminder.orderId)))
+    const areAllVisibleReminderOrdersSelected = areAllVisibleOrderIdsSelected(
+        selectedOrderIds,
+        visibleReminderOrderIds,
+    )
+
+    const handleToggleReminderOrderSelection = (orderId: string) => {
+        setSelectedOrderIds((prev) => toggleOrderSelectionIds(prev, orderId))
+    }
+
+    const handleToggleSelectAllReminderOrders = () => {
+        setSelectedOrderIds((prev) =>
+            toggleSelectAllVisibleOrderIds(prev, visibleReminderOrderIds, areAllVisibleReminderOrdersSelected),
+        )
+    }
 
     const handleCopySelected = async () => {
         const selectedOrders = getSelectedOrdersByIds(orders, selectedOrderIds)
@@ -274,19 +458,19 @@ export function OrdersPageClient({ initialOrders }: OrdersPageClientProps) {
         }
     }
 
-    const favoriteOrders = orders.filter((order) => favoriteOrderIds.includes(order.id))
+    const favouriteOrders = orders.filter((order) => favouriteOrderIds.includes(order.id))
 
-    const handleSelectFavoriteOrder = (order: Order) => {
-        setIsFavoritesModalOpen(false)
+    const handleSelectFavouriteOrder = (order: Order) => {
+        setIsFavouritesModalOpen(false)
 
         if (order.status === 'pending') {
-            setPendingFavoriteOrderToView(order)
-            setActiveFavoriteOrderToView(null)
+            setPendingFavouriteOrderToView(order)
+            setActiveFavouriteOrderToView(null)
             return
         }
 
-        setActiveFavoriteOrderToView(order)
-        setPendingFavoriteOrderToView(null)
+        setActiveFavouriteOrderToView(order)
+        setPendingFavouriteOrderToView(null)
     }
 
     useEffect(() => {
@@ -298,6 +482,53 @@ export function OrdersPageClient({ initialOrders }: OrdersPageClientProps) {
             window.clearTimeout(timeout)
         }
     }, [searchValue])
+
+    useEffect(() => {
+        try {
+            const customRaw = window.localStorage.getItem(CUSTOM_REMINDERS_STORAGE_KEY)
+
+            if (customRaw) {
+                const parsed = JSON.parse(customRaw) as CustomReminderByOrderId
+                setCustomReminderByOrderId(parsed)
+            }
+
+            const dismissedRaw = window.localStorage.getItem(DISMISSED_REMINDERS_STORAGE_KEY)
+
+            if (dismissedRaw) {
+                const parsed = JSON.parse(dismissedRaw) as string[]
+                setDismissedReminderIds(parsed)
+            }
+        } catch {
+            setCustomReminderByOrderId({})
+            setDismissedReminderIds([])
+        }
+    }, [])
+
+    useEffect(() => {
+        window.localStorage.setItem(CUSTOM_REMINDERS_STORAGE_KEY, JSON.stringify(customReminderByOrderId))
+    }, [customReminderByOrderId])
+
+    useEffect(() => {
+        window.localStorage.setItem(DISMISSED_REMINDERS_STORAGE_KEY, JSON.stringify(dismissedReminderIds))
+    }, [dismissedReminderIds])
+
+    useEffect(() => {
+        setCustomReminderByOrderId((prev) => {
+            const next: CustomReminderByOrderId = {}
+
+            for (const [orderId, remindAt] of Object.entries(prev)) {
+                const order = orders.find((item) => item.id === orderId)
+
+                if (!order || order.status === 'shipped') {
+                    continue
+                }
+
+                next[orderId] = remindAt
+            }
+
+            return JSON.stringify(next) === JSON.stringify(prev) ? prev : next
+        })
+    }, [orders])
 
     useEffect(() => {
         const orderIds = orders.map((order) => order.id)
@@ -342,32 +573,32 @@ export function OrdersPageClient({ initialOrders }: OrdersPageClientProps) {
         const orderIds = orders.map((order) => order.id)
 
         if (orderIds.length === 0) {
-            setFavoriteOrderIds([])
+            setFavouriteOrderIds([])
             return
         }
 
         let isCancelled = false
 
-        const loadFavorites = async () => {
+        const loadFavourites = async () => {
             try {
-                const favoriteIds = await fetchFavoriteOrderIdsByOrderIds(orderIds)
+                const favouriteIds = await fetchFavouriteOrderIdsByOrderIds(orderIds)
 
                 if (isCancelled) {
                     return
                 }
 
-                setFavoriteOrderIds(favoriteIds)
+                setFavouriteOrderIds(favouriteIds)
             } catch (error) {
                 if (isCancelled) {
                     return
                 }
 
-                const message = error instanceof Error ? error.message : 'Unable to load favorites.'
+                const message = error instanceof Error ? error.message : 'Unable to load favourites.'
                 setFeedbackMessage({ type: 'error', text: message })
             }
         }
 
-        void loadFavorites()
+        void loadFavourites()
 
         return () => {
             isCancelled = true
@@ -428,7 +659,8 @@ export function OrdersPageClient({ initialOrders }: OrdersPageClientProps) {
                     onSelectDateRange={setSelectedDateRange}
                     onClearFilters={clearFilters}
                     onOpenAddOrderModal={() => setIsAddOrderModalOpen(true)}
-                    onOpenFavoritesModal={() => setIsFavoritesModalOpen(true)}
+                    onOpenFavouritesModal={() => setIsFavouritesModalOpen(true)}
+                    onOpenReminderTray={() => setIsReminderTrayOpen(true)}
                     onCopySelected={handleCopySelected}
                     onCopySelectedCsv={handleCopySelectedCsv}
                     selectedOrderCount={selectedOrderIds.length}
@@ -448,15 +680,85 @@ export function OrdersPageClient({ initialOrders }: OrdersPageClientProps) {
                     </div>
                 ) : null}
 
+                {isReminderTrayOpen ? (
+                    <aside className="orders-reminder-tray" role="dialog" aria-label="Reminders tray">
+                        <div className="orders-reminder-tray-header">
+                            <h3 className="orders-reminder-tray-title">Reminders</h3>
+                            <label className="orders-reminder-tray-select-all">
+                                <input
+                                    type="checkbox"
+                                    className="orders-reminder-checkbox"
+                                    checked={
+                                        visibleReminderOrderIds.length > 0 &&
+                                        areAllVisibleReminderOrdersSelected
+                                    }
+                                    onChange={handleToggleSelectAllReminderOrders}
+                                    aria-label="Select all reminder orders"
+                                />
+                                <span>Select all</span>
+                            </label>
+                            <button
+                                type="button"
+                                className="orders-reminder-tray-close"
+                                onClick={() => setIsReminderTrayOpen(false)}
+                                aria-label="Close reminders tray"
+                            >
+                                <IoMdClose size={16} />
+                            </button>
+                        </div>
+                        <div className="orders-reminder-tray-list" aria-live="polite">
+                            {visibleReminderCards.length > 0 ? (
+                                visibleReminderCards.map((reminder) => (
+                                    <article
+                                        key={reminder.id}
+                                        className={
+                                            reminder.type === 'urgent'
+                                                ? 'orders-reminder-card is-urgent'
+                                                : 'orders-reminder-card is-custom'
+                                        }
+                                    >
+                                        <input
+                                            type="checkbox"
+                                            className="orders-reminder-checkbox"
+                                            checked={selectedOrderIds.includes(reminder.orderId)}
+                                            onChange={() => handleToggleReminderOrderSelection(reminder.orderId)}
+                                            aria-label={`Select order ${reminder.oaNumber ?? reminder.orderId}`}
+                                        />
+                                        <div className="orders-reminder-card-text">
+                                            <p className="orders-reminder-card-title">OA {reminder.oaNumber ?? '-'}</p>
+                                            <p className="orders-reminder-card-meta">{reminder.accountCode}</p>
+                                            <p className="orders-reminder-card-message">{reminder.message}</p>
+                                            <p className="orders-reminder-card-date">{reminder.dateLabel}</p>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            className="orders-reminder-card-close"
+                                            onClick={() => handleDismissReminderCard(reminder.id)}
+                                            aria-label="Dismiss reminder"
+                                        >
+                                            <IoMdClose size={16} />
+                                        </button>
+                                    </article>
+                                ))
+                            ) : (
+                                <p className="orders-reminder-tray-empty">No reminders right now.</p>
+                            )}
+                        </div>
+                    </aside>
+                ) : null}
+
                 <section className="orders-table-section" aria-label="Pending orders">
                     <h2 className="orders-table-section-title">Pending Orders</h2>
                     <OrdersDataTable
                         data={pendingOrders}
                         onChangeStatus={handleChangeOrderStatus}
                         onUpdateOrder={handleUpdateOrderLocally}
-                        favoriteOrderIds={favoriteOrderIds}
-                        pendingFavoriteOrderIds={pendingFavoriteOrderIds}
-                        onToggleFavorite={handleToggleFavorite}
+                        favouriteOrderIds={favouriteOrderIds}
+                        pendingFavouriteOrderIds={pendingFavouriteOrderIds}
+                        onToggleFavourite={handleToggleFavourite}
+                        customReminderOrderIds={customReminderOrderIds}
+                        onSetCustomReminder={handleSetCustomReminder}
+                        onClearCustomReminder={handleClearCustomReminder}
                         notesByOrderId={notesByOrderId}
                         onSaveOrderNote={handleSaveOrderNote}
                         selectedOrderIds={selectedOrderIds}
@@ -471,8 +773,8 @@ export function OrdersPageClient({ initialOrders }: OrdersPageClientProps) {
                             )
                         }
                         areAllVisibleSelected={areAllPendingVisibleSelected}
-                        externalOrderToView={pendingFavoriteOrderToView}
-                        onExternalOrderToViewHandled={() => setPendingFavoriteOrderToView(null)}
+                        externalOrderToView={pendingFavouriteOrderToView}
+                        onExternalOrderToViewHandled={() => setPendingFavouriteOrderToView(null)}
                     />
                 </section>
 
@@ -482,9 +784,12 @@ export function OrdersPageClient({ initialOrders }: OrdersPageClientProps) {
                         data={activeOrders}
                         onChangeStatus={handleChangeOrderStatus}
                         onUpdateOrder={handleUpdateOrderLocally}
-                        favoriteOrderIds={favoriteOrderIds}
-                        pendingFavoriteOrderIds={pendingFavoriteOrderIds}
-                        onToggleFavorite={handleToggleFavorite}
+                        favouriteOrderIds={favouriteOrderIds}
+                        pendingFavouriteOrderIds={pendingFavouriteOrderIds}
+                        onToggleFavourite={handleToggleFavourite}
+                        customReminderOrderIds={customReminderOrderIds}
+                        onSetCustomReminder={handleSetCustomReminder}
+                        onClearCustomReminder={handleClearCustomReminder}
                         notesByOrderId={notesByOrderId}
                         onSaveOrderNote={handleSaveOrderNote}
                         selectedOrderIds={selectedOrderIds}
@@ -499,8 +804,8 @@ export function OrdersPageClient({ initialOrders }: OrdersPageClientProps) {
                             )
                         }
                         areAllVisibleSelected={areAllActiveVisibleSelected}
-                        externalOrderToView={activeFavoriteOrderToView}
-                        onExternalOrderToViewHandled={() => setActiveFavoriteOrderToView(null)}
+                        externalOrderToView={activeFavouriteOrderToView}
+                        onExternalOrderToViewHandled={() => setActiveFavouriteOrderToView(null)}
                     />
                 </section>
                 <AddOrderModal
@@ -509,11 +814,11 @@ export function OrdersPageClient({ initialOrders }: OrdersPageClientProps) {
                     onOrderCreated={handleOrderCreated}
                     onOrderCreateError={handleOrderCreateError}
                 />
-                <FavoritesModal
-                    isOpen={isFavoritesModalOpen}
-                    favoriteOrders={favoriteOrders}
-                    onClose={() => setIsFavoritesModalOpen(false)}
-                    onSelectOrder={handleSelectFavoriteOrder}
+                <FavouritesModal
+                    isOpen={isFavouritesModalOpen}
+                    favouriteOrders={favouriteOrders}
+                    onClose={() => setIsFavouritesModalOpen(false)}
+                    onSelectOrder={handleSelectFavouriteOrder}
                 />
             </section>
         </main>

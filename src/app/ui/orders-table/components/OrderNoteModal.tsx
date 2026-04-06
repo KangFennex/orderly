@@ -4,6 +4,8 @@ import { IoMdClose } from 'react-icons/io'
 
 type OrderNoteModalProps = {
     orderId: string | null
+    accountCode: string
+    oaNumber: string | null
     noteDraft: string
     isSaving: boolean
     onNoteDraftChange: (value: string) => void
@@ -13,6 +15,8 @@ type OrderNoteModalProps = {
 
 export function OrderNoteModal({
     orderId,
+    accountCode,
+    oaNumber,
     noteDraft,
     isSaving,
     onNoteDraftChange,
@@ -28,18 +32,20 @@ export function OrderNoteModal({
             className="add-order-modal-overlay"
             role="dialog"
             aria-modal="true"
-            onClick={() => {
-                if (!isSaving) {
-                    onClose()
-                }
-            }}
         >
             <div
                 className="order-note-modal"
-                onClick={(event) => event.stopPropagation()}
             >
                 <div className="order-note-modal-header">
-                    <h3 className="order-note-modal-title">Order Note</h3>
+                    <div className="order-note-modal-header-text">
+                        <h3 className="order-note-modal-title">Order Note</h3>
+                        <div className="order-note-modal-order-id">
+                            <span className="order-note-modal-account-code">{accountCode}</span>
+                            {oaNumber && (
+                                <span className="order-note-modal-oa-number">OA {oaNumber}</span>
+                            )}
+                        </div>
+                    </div>
                     <button
                         type="button"
                         className="add-order-close-button"

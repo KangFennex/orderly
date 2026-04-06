@@ -3,19 +3,19 @@
 import { IoMdClose } from 'react-icons/io'
 import type { Order } from '@/app/types/orders'
 
-type FavoritesModalProps = {
+type FavouritesModalProps = {
     isOpen: boolean
-    favoriteOrders: Order[]
+    favouriteOrders: Order[]
     onClose: () => void
     onSelectOrder: (order: Order) => void
 }
 
-export function FavoritesModal({
+export function FavouritesModal({
     isOpen,
-    favoriteOrders,
+    favouriteOrders,
     onClose,
     onSelectOrder,
-}: FavoritesModalProps) {
+}: FavouritesModalProps) {
     if (!isOpen) {
         return null
     }
@@ -29,26 +29,26 @@ export function FavoritesModal({
         >
             <div className="add-order-modal" onClick={(event) => event.stopPropagation()}>
                 <div className="add-order-modal-header">
-                    <h2 className="add-order-modal-title">Favorite Orders</h2>
+                    <h2 className="add-order-modal-title">Favourite Orders</h2>
                     <button
                         type="button"
                         className="add-order-close-button"
                         onClick={onClose}
-                        aria-label="Close favorites modal"
+                        aria-label="Close favourites modal"
                     >
                         <IoMdClose size={24} />
                     </button>
                 </div>
 
-                <div className="favorites-modal-content">
-                    {favoriteOrders.length === 0 ? (
-                        <p className="favorites-empty-state">No favorite orders yet.</p>
+                <div className="favourites-modal-content">
+                    {favouriteOrders.length === 0 ? (
+                        <p className="favourites-empty-state">No favourite orders yet.</p>
                     ) : (
-                        <ul className="favorites-list" aria-label="Favorite orders list">
-                            {favoriteOrders.map((order) => (
+                        <ul className="favourites-list" aria-label="Favourite orders list">
+                            {favouriteOrders.map((order) => (
                                 <li
                                     key={order.id}
-                                    className="favorites-list-item"
+                                    className="favourites-list-item"
                                     role="button"
                                     tabIndex={0}
                                     onClick={() => onSelectOrder(order)}

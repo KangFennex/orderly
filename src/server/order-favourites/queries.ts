@@ -1,10 +1,10 @@
 import { supabaseServerClient } from '@/app/lib/supabase/server'
 
-export type OrderFavoriteRecord = {
+export type OrderFavouriteRecord = {
     order_id: string
 }
 
-export async function getOrderFavoritesByOrderIds(orderIds: string[]): Promise<OrderFavoriteRecord[]> {
+export async function getOrderFavouritesByOrderIds(orderIds: string[]): Promise<OrderFavouriteRecord[]> {
     if (orderIds.length === 0) {
         return []
     }
@@ -15,8 +15,8 @@ export async function getOrderFavoritesByOrderIds(orderIds: string[]): Promise<O
         .in('order_id', orderIds)
 
     if (error) {
-        throw new Error(`Failed to fetch order favorites from Supabase: ${error.message}`)
+        throw new Error(`Failed to fetch order favourites from Supabase: ${error.message}`)
     }
 
-    return (data ?? []) as OrderFavoriteRecord[]
+    return (data ?? []) as OrderFavouriteRecord[]
 }

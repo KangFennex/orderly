@@ -20,7 +20,7 @@
   }
 
   .orders-hero-actions-grid .orders-clear-filters-button,
-  .orders-hero-add-action .add-order-button {
+  .orders-hero-actions-grid .add-order-button {
     width: 100%;
   }
 
@@ -45,6 +45,12 @@
 
   .orders-search-input {
     width: 100%;
+  }
+
+  .orders-reminder-tray {
+    top: 0.6rem;
+    right: 0.6rem;
+    width: min(18rem, calc(100vw - 1.2rem));
   }
 
   .orders-table {
