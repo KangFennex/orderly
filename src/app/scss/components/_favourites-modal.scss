@@ -2,6 +2,38 @@
   padding: 0.75rem 1rem 1rem;
 }
 
+.favourites-modal-header-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.favourites-modal-clear-button {
+  min-width: 4.2rem;
+  height: 2rem;
+  border: none;
+  border-radius: 0.45rem;
+  background: rgba(148, 163, 184, 0.2);
+  color: #f1f5f9;
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    background: rgba(148, 163, 184, 0.3);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2);
+  }
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+}
+
 .favourites-empty-state {
   margin: 0;
   color: #94a3b8;
@@ -18,13 +50,82 @@
 
 .favourites-list-item {
   display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.6rem;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 0.5rem;
+  background: rgba(15, 23, 42, 0.55);
+  color: #e2e8f0;
+  transition:
+    border-color 0.18s ease,
+    background-color 0.18s ease,
+    transform 0.18s ease;
+
+  &:hover {
+    border-color: rgba(56, 189, 248, 0.34);
+    background: rgba(30, 41, 59, 0.76);
+    transform: translateY(-1px);
+  }
+}
+
+.favourites-list-item-button {
+  width: 100%;
+  display: grid;
   grid-template-columns: 1fr 1fr 1.5fr auto;
   align-items: center;
   gap: 0.6rem;
-  padding: 0.65rem;
-  border: 1px solid rgba(148, 163, 184, 0.2);
-  border-radius: 0.5rem;
-  background: rgba(15, 23, 42, 0.6);
-  color: #e2e8f0;
+  padding: 0.75rem;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  text-align: left;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: none;
+  }
+
+  .status-pill {
+    justify-self: end;
+  }
+
+  > span {
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+.favourites-list-remove-button {
+  width: 1.9rem;
+  height: 1.9rem;
+  margin-right: 0.35rem;
+  border: none;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.16);
+  color: #cbd5e1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    background: rgba(248, 113, 113, 0.2);
+    color: #fecaca;
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2);
+  }
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
 }
 

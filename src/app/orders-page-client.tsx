@@ -473,6 +473,20 @@ export function OrdersPageClient({ initialOrders }: OrdersPageClientProps) {
         setPendingFavouriteOrderToView(null)
     }
 
+    const handleRemoveFavouriteFromModal = (orderId: string) => {
+        void handleToggleFavourite(orderId)
+    }
+
+    const handleClearFavouritesFromModal = () => {
+        const removableOrderIds = favouriteOrderIds.filter(
+            (orderId) => !pendingFavouriteOrderIds.includes(orderId),
+        )
+
+        removableOrderIds.forEach((orderId) => {
+            void handleToggleFavourite(orderId)
+        })
+    }
+
     useEffect(() => {
         const timeout = window.setTimeout(() => {
             setDebouncedSearchTerm(searchValue)
@@ -817,8 +831,11 @@ export function OrdersPageClient({ initialOrders }: OrdersPageClientProps) {
                 <FavouritesModal
                     isOpen={isFavouritesModalOpen}
                     favouriteOrders={favouriteOrders}
+                    pendingFavouriteOrderIds={pendingFavouriteOrderIds}
                     onClose={() => setIsFavouritesModalOpen(false)}
                     onSelectOrder={handleSelectFavouriteOrder}
+                    onRemoveFavourite={handleRemoveFavouriteFromModal}
+                    onClearFavourites={handleClearFavouritesFromModal}
                 />
             </section>
         </main>
